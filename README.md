@@ -32,5 +32,54 @@ For in its song, we find repose,
 And in its rhythm, our spirits glow.
 ```
 
+***
+
+## Install
+
+```sh
+pip install monsterpianotransformer
+```
+
+#### (Optional) [FluidSynth](https://github.com/FluidSynth/fluidsynth/wiki/Download) for MIDI to Audio functinality
+
+##### Ubuntu or Debian
+
+```sh
+sudo apt-get install fluidsynth
+```
+
+##### Windows (with [Chocolatey](https://github.com/chocolatey/choco))
+
+```sh
+choco install fluidsynth
+```
+
+***
+
+## Quick-start use example
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model()
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[6][1]
+
+# Load seed MIDI
+input_tokens = mpt.midi_to_tokens(sample_midi_path)
+
+# Generate seed MIDI continuation
+output_tokens = mpt.generate(model, input_tokens, 600, return_prime=True)
+
+# Save output to MIDI
+mpt.tokens_to_midi(output_tokens[0])
+```
+
+***
+
 ### Project Los Angeles
-### Tegridy Code 2024
+### Tegridy Code 2025
