@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "monsterpianotransformer"
-version = "25.1.19"
+version = "25.1.22"
 description = "Ultra-fast and very well fitted solo Piano music transformer"
 authors = [
     {name = "Alex Lev", email = "alexlev61@proton.me"}
