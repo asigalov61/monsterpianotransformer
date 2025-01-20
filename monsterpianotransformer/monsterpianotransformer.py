@@ -172,5 +172,135 @@ def generate_long(model,
     return outputs
 
 #===================================================================================================
+
+def inpaint_pitches(model,
+                    input_tokens,
+                    num_pitches_to_inpaint=600,
+                    num_prime_pitches=64,
+                    keep_high_pitches=False,
+                    temperature=0.9,
+                    top_k_value=0,
+                    verbose=False
+                    ):
+
+    #==================================================================
+
+    device = next(model.parameters()).device.type
+
+    #==================================================================
+
+    if verbose:
+        print('=' * 70)
+        print('Inpainting pitches...')
+
+    comp_total_pitches = len([p for p in input_tokens if 256 < p < 384])
+
+    num_prime_pitches = max(0, min(comp_total_pitches, num_prime_pitches))
+    num_pitches_to_inpaint = max(1, min(comp_total_pitches, num_pitches_to_inpaint))
+
+    inputs_list = []
+    inp_lst = []
+
+    for t in input_tokens:
+        if t < 128:
+            if inp_lst:
+                inputs_list.append(inp_lst)
+
+            inp_lst = [t]
+
+        else:
+            inp_lst.append(t)
+            
+    if inp_lst:
+        inputs_list.append(inp_lst)
+
+    #==================================================================
+
+    inputs = []
+    pcount = 0
+
+    if num_prime_pitches > 0:
+        
+        for il_idx, lst in enumerate(inputs_list):
+            
+            for t in lst:
+                
+                inputs.append(t)
+                
+                if 256 < t < 384:
+                    pcount += 1
+    
+                if pcount == num_prime_pitches:
+                    break
+                    
+            if pcount == num_prime_pitches:
+                il_idx += 1
+                break
+
+    #==================================================================
+   
+    while pcount < num_pitches_to_inpaint or pcount < comp_total_pitches:
+
+        fp = True
+
+        for t in inputs_list[il_idx]:
+
+            if t < 256 or t > 384:
+                inputs.append(t)
+
+            else:
+
+                if keep_high_pitches and fp:
+                        inputs.append(t)
+                        fp = False
+                        pcount += 1
+                    
+                else:
+
+                    y = 0
+    
+                    while y < 256 or y > 384:
+    
+                        x = torch.LongTensor(inputs).to(device)
+        
+                        with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+        
+                            if top_k_value > 0:
+                    
+                                out = model.generate(x,
+                                                     1,
+                                                     temperature=temperature,
+                                                     filter_logits_fn=top_k,
+                                                     filter_kwargs={'k': top_k_value},
+                                                     return_prime=False,
+                                                     verbose=False
+                                                    )
+                                
+                            else:
+                                
+                                out = model.generate(x,
+                                                     1,
+                                                     temperature=temperature,
+                                                     return_prime=False,
+                                                     verbose=False
+                                                    )
+                                
+                        y = out.tolist()[0][0]
+    
+                    inputs.append(y)
+                    pcount += 1
+
+        il_idx += 1
+        
+    #==================================================================
+
+    if verbose:
+        print('=' * 70)
+        print('Done!')
+        print('=' * 70)
+
+    return inputs
+
+#===================================================================================================
 # This is the end of model_loader Python module
 #===================================================================================================
