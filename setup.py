@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="monsterpianotransformer",
-    version="25.1.24",
+    version="25.1.27",
     description="Ultra-fast and very well fitted solo Piano music transformer",
     long_description=long_description,
     long_description_content_type="text/markdown",
