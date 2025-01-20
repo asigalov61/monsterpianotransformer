@@ -1,8 +1,8 @@
 #===================================================================================================
-# Giant Music Transformer main Python module
+# Monster Piano Transformer main Python module
 #===================================================================================================
 # Project Los Angeles
-# Tegridy Code 2024
+# Tegridy Code 2025
 #===================================================================================================
 # License: Apache 2.0
 #===================================================================================================
@@ -24,7 +24,7 @@ def generate(model,
              num_gen_tokens=600,
              num_batches=1,
              temperature=0.9,
-             top_p_value=0.96,
+             top_p_value=0.0,
              return_prime=False,
              verbose=False
             ):
@@ -37,19 +37,29 @@ def generate(model,
     with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
 
         x = torch.LongTensor([input_tokens] * num_batches).to(device)
+        
+        if 0.0 < top_p_value < 1.0:
 
-        out = model.generate(x,
-                             num_gen_tokens,
-                             temperature=temperature,
-                             filter_logits_fn=top_p,
-                             filter_kwargs={'thres': top_p_value},
-                             return_prime=return_prime,
-                             verbose=verbose
-                            )
-    
+            out = model.generate(x,
+                                 num_gen_tokens,
+                                 temperature=temperature,
+                                 filter_logits_fn=top_p,
+                                 filter_kwargs={'thres': top_p_value},
+                                 return_prime=return_prime,
+                                 verbose=verbose
+                                )
+            
+        else:
+            
+            out = model.generate(x,
+                                 num_gen_tokens,
+                                 temperature=temperature,
+                                 return_prime=return_prime,
+                                 verbose=verbose
+                                )
+            
     y = out.tolist()
 
-    
     if verbose:
         print('=' * 70)
         print('Done!')

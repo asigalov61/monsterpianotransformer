@@ -1,13 +1,14 @@
 #===================================================================================================
-# Giant Music Transformer model_loader Python module
+# Monster Piano Transformer model_loader Python module
 #===================================================================================================
 # Project Los Angeles
-# Tegridy Code 2024
+# Tegridy Code 2025
 #===================================================================================================
 # License: Apache 2.0
 #===================================================================================================
 
 import os
+
 os.environ['HF_HUB_ENABLE_HF_TRANSFER'] = '1'
 
 #===================================================================================================
@@ -24,34 +25,39 @@ from torchsummary import summary
 
 #===================================================================================================
 
-def load_model(model_size='medium', device='cuda', compile_mode='max-autotune', verbose=False):
+def load_model(model_name='without velocity - 5 epochs',
+               device='cuda',
+               compile_mode='max-autotune',
+               verbose=False
+               ):
     """
     Load and initialize Giant Music Transformer model with specified parameters.
 
     Parameters:
-    model_size (str): The size of the model to load. Options include 'medium', 'medium-swapped', 'large', 'extra-large', 'extra-large-b'. Default and best is 'medium'.
+    model_name (str): The name of the model to load. Options include 'withiout velocity - 5 epochs', 'withiout velocity - 3 epochs' and 'with velocity - 3 epochs'. Default and best is 'withiout velocity - 5 epochs'.
     device (str): The computing device to use. Options include 'cpu' or 'cuda'. Default is 'cuda'.
     compile_mode (str): The torch.compile mode for the model. Options include 'default', 'reduce-overhead', 'max-autotune'. Default is 'max-autotune'.
     verbose (bool): Whether to print detailed information during the loading process. Default is False.
 
     Returns:
-    model: The initialized Giant Music Transformer model configured with the specified parameters.
+    model: The initialized Monster Piano Transformer model configured with the specified parameters.
 
-    Example:
-    import giantmusictransformer as gmt
+    Example use:
     
-    gmt_model = gmt.load_model(model_size='medium', device='cpu', compile_mode='reduce-overhead', verbose=True)
+    import monsterpianotransformer as mpt
+    
+    mpt_model = mpt.load_model()
     """
 
     if verbose:
         os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '0'
         
         print('=' * 70)
-        print('Selected model:', model_size.title(), '/', MODELS_PARAMETERS[model_size]['params'], 'M params')
+        print('Selected model:', model_name.title(), '/', MODELS_PARAMETERS[model_anme]['params'], 'M params')
         print('=' * 70)
         print('Model info:')
         print('-' * 70)
-        print(MODELS_INFO[model_size])
+        print(MODELS_INFO[model_name])
 
         print('=' * 70)
         print('Downloading model...')
@@ -60,7 +66,7 @@ def load_model(model_size='medium', device='cuda', compile_mode='max-autotune', 
         os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
 
     model_data = hf_hub_download(repo_id=MODELS_HF_REPO_LINK,
-                                filename=MODELS_FILE_NAMES[model_size]
+                                filename=MODELS_FILE_NAMES[model_name]
                                 )
 
     if verbose:
@@ -69,17 +75,20 @@ def load_model(model_size='medium', device='cuda', compile_mode='max-autotune', 
         
         print('Instantiating model...')
     
-    gmt_model = TransformerWrapper( num_tokens = MODELS_PAD_IDX+1,
-                                    max_seq_len = MODELS_SEQ_LEN,
-                                    attn_layers = Decoder(dim = MODELS_PARAMETERS[model_size]['dim'],
-                                                          depth = MODELS_PARAMETERS[model_size]['depth'],
-                                                          heads = MODELS_PARAMETERS[model_size]['heads'],
-                                                          rotary_pos_emb = MODELS_PARAMETERS[model_size]['rope'],
-                                                          attn_flash = True
-                                                         )
-                                    )
+    mpt_model = TransformerWrapper(num_tokens = MODELS_PARAMETERS[model_name]['pad_idx']+1,
+                                   max_seq_len = MODELS_PARAMETERS[model_name]['seq_len'],
+                                   attn_layers = Decoder(dim = MODELS_PARAMETERS[model_name]['dim'],
+                                                         depth = MODELS_PARAMETERS[model_name]['depth'],
+                                                         heads = MODELS_PARAMETERS[model_name]['heads'],
+                                                         rotary_pos_emb = MODELS_PARAMETERS[model_name]['rope'],
+                                                         attn_flash = True
+                                                        )
+                                  )
     
-    gmt_model = AutoregressiveWrapper(gmt_model, ignore_index = MODELS_PAD_IDX, pad_value=MODELS_PAD_IDX)
+    mpt_model = AutoregressiveWrapper(mpt_model,
+                                      ignore_index = MODELS_PARAMETERS[model_name]['pad_idx'],
+                                      pad_value=MODELS_PARAMETERS[model_name]['pad_idx']
+                                     )
 
     if verbose:
         print('Done!')
@@ -87,7 +96,7 @@ def load_model(model_size='medium', device='cuda', compile_mode='max-autotune', 
         
         print('Loading model...')
     
-    gmt_model.load_state_dict(torch.load(model_data, weights_only=True))
+    mpt_model.load_state_dict(torch.load(model_data, weights_only=True))
 
     if verbose:
         print('Done!')
@@ -95,7 +104,7 @@ def load_model(model_size='medium', device='cuda', compile_mode='max-autotune', 
     
         print('Compiling model...')
 
-    gmt_model = torch.compile(gmt_model, mode=compile_mode)
+    mpt_model = torch.compile(mpt_model, mode=compile_mode)
 
     if verbose:
         print('Done!')
@@ -103,16 +112,16 @@ def load_model(model_size='medium', device='cuda', compile_mode='max-autotune', 
     
         print('Activating model...')
     
-    gmt_model.to(device)
-    gmt_model.eval()  
+    mpt_model.to(device)
+    mpt_model.eval()  
 
     if verbose:
         print('Done!')
         print('=' * 70)
         
-        summary(gmt_model)
+        summary(mpt_mode)
 
-    return gmt_model
+    return mpt_model
 
 #===================================================================================================
 # This is the end of model_loader Python module

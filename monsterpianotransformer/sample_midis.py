@@ -1,14 +1,14 @@
 #===================================================================================================
-# Giant Music Transformer sample_midis Python module
+# Monster Piano Transformer sample_midis Python module
 #===================================================================================================
 # Project Los Angeles
-# Tegridy Code 2024
+# Tegridy Code 2025
 #===================================================================================================
 # License: Apache 2.0
 #===================================================================================================
 
 import importlib.resources as pkg_resources
-from giantmusictransformer import seed_midis
+from monsterpianotransformer import seed_midis
 
 #===================================================================================================
 
