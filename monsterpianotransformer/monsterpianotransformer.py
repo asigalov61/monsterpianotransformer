@@ -302,5 +302,119 @@ def inpaint_pitches(model,
     return inputs
 
 #===================================================================================================
+
+def inpaint_velocities_simple(model,
+                              input_tokens,
+                              num_notes_to_inpaint=600,
+                              num_prime_notes=8,
+                              num_memory_tokens=1024,
+                              temperature=1.3,
+                              verbose=False
+                             ):
+
+    if verbose:
+        print('=' * 70)
+        print('Inpainting velocities...')
+        
+    #=======================================================
+
+    device = next(model.parameters()).device.type
+
+    #=======================================================
+
+    num_notes_to_inpaint = max(1, num_notes_to_inpaint)
+    num_prime_notes = max(0, min(2040, num_prime_notes))
+    num_memory_tokens = max(8, min(2040, num_memory_tokens))
+    
+    #=======================================================
+
+    nv_score_list = []
+    nv_score = []
+    nv_sc = []
+    
+    for t in input_tokens:
+        if t < 128:
+            if nv_score:
+                nv_score_list.append(nv_score)
+                
+            nv_score = [[t]]
+    
+        else:
+            if t < 384:
+                nv_sc.append(t)
+    
+            else:
+                if nv_sc:
+                    nv_sc.append(t)
+                    nv_score.append(nv_sc)
+    
+                nv_sc = []
+
+    #=======================================================
+
+    inputs = []
+
+    if not [t for t in input_tokens if t > 384]:
+        num_prime_notes = 0    
+    
+    for t in nv_score_list[:num_prime_notes]:
+        inputs.extend(t[0])
+    
+        for tt in t[1:]:
+            inputs.extend(tt)
+
+    #=======================================================
+
+    notes_counter = 0
+    
+    for i in range(num_prime_notes, len(nv_score_list)):
+
+        if notes_counter >= num_notes_to_inpaint:
+            break
+   
+        inputs.extend(nv_score_list[i][0])
+    
+        for note in nv_score_list[i][1:]:
+
+            if notes_counter >= num_notes_to_inpaint:
+                break
+
+            inputs.extend(note[:-1])
+            
+            x = torch.LongTensor(inputs[-num_memory_tokens:]).cuda()
+    
+            y = 0
+    
+            while y < 384:
+            
+                with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                    
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         return_prime=False,
+                                         verbose=False)
+                
+                y = out.tolist()[0][0]
+    
+            inputs.append(y)
+
+            notes_counter += 1
+
+    #=======================================================
+    
+    if verbose:
+        print('=' * 70)
+        print('Done!')
+        print('=' * 70)
+        
+    return inputs
+
+#===================================================================================================
+
+def inpaint_velocities_seq2seq():
+    return None
+
+#===================================================================================================
 # This is the end of model_loader Python module
 #===================================================================================================
