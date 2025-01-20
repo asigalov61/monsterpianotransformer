@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=74.1.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "monsterpianotransformer"
+version = "25.1.19"
+description = "Ultra-fast and very well fitted solo Piano music transformer"
+authors = [
+    {name = "Alex Lev", email = "alexlev61@proton.me"}
+]
+maintainers = [
+  {name = "Alex Lev", email = "alexlev61@proton.me"}
+]
+dependencies = [
+    "tqdm",
+    "ipywidgets",
+    "matplotlib",
+    "numpy",
+    "scikit-learn",
+    "torch",
+    "einops",
+    "torch-summary",
+    "hf-transfer",
+    "huggingface_hub"
+]
+keywords = ["MIDI", "music", "music ai", "music transformer", "artificial instelligence"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Multimedia :: Sound/Audio :: MIDI",
+    "License :: OSI Approved :: Apache Software License",  
+    "Operating System :: OS Independent",        
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+requires-python = ">=3.6"
+license = { text = "Apache Software License 2.0" }
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "https://github.com/asigalov61/monsterpianotransformer"
+Examples = "https://github.com/asigalov61/monsterpianotransformer/examples"
+Documentation = "https://github.com/asigalov61/monsterpianotransformer/docs"
+Repository = "https://github.com/asigalov61/monsterpianotransformer"
+Issues = "https://github.com/asigalov61/monsterpianotransformer/issues"
+Discussions = "https://github.com/asigalov61/monsterpianotransformer/discussions"
+Models = "https://huggingface.co/asigalov61/Monster-Piano-Transformer"
+Demo = "https://huggingface.co/spaces/asigalov61/Monster-Piano-Transformer"

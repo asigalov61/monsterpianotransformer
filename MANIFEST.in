@@ -1,0 +1,5 @@
+include README.md
+recursive-include monsterpianotransformer/ *
+recursive-include monsterpianotransformer/seed_midis *
+recursive-include monsterpianotransformer/examples *
+recursive-include monsterpianotransformer/artwork *
