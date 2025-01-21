@@ -37,15 +37,15 @@ def generate(model,
     with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
         
         num_gen_tokens = max(1, min(2047, num_gen_tokens))
+        
+        prime = input_tokens
 
         if len(input_tokens) <= (2048 - num_gen_tokens):
             
             inputs = input_tokens
-            prime = []
             
         else:
-            inputs = input_tokens[-(2048 - num_gen_tokens):]
-            prime = input_tokens          
+            inputs = input_tokens[-(2048 - num_gen_tokens):]         
             
         x = torch.LongTensor([inputs] * num_batches).to(device)
         
