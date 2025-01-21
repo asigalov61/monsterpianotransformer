@@ -1,4 +1,7 @@
 from .app import app
 
-if __name__ == "__main__":
+def main():
     app.launch()
+
+if __name__ == "__main__":
+    main()
