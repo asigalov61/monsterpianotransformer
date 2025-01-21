@@ -36,7 +36,7 @@ setup(
         "console_scripts": [
             "monsterpianotransformer-gradio=monsterpianotransformer.gradio.__main__:main",
         ],
-    }
+    },
     keywords=['MIDI', 'music', 'music ai', 'music transformer'],
     python_requires='>=3.6',
     license='Apache Software License 2.0',
