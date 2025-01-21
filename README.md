@@ -70,13 +70,63 @@ model = mpt.load_model()
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path)
+input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=False)
 
 # Generate seed MIDI continuation
 output_tokens = mpt.generate(model, input_tokens, 600, return_prime=True)
 
-# Save output to MIDI
-mpt.tokens_to_midi(output_tokens[0])
+# Save output batch 0 to MIDI
+mpt.tokens_to_midi(output_tokens[0], model_with_velocity=False)
+```
+
+***
+
+## Main features use examples
+
+### Long auto-continuation generation
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model()
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[6][1]
+
+# Load seed MIDI
+input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=False)
+
+# Generate seed MIDI continuation
+output_tokens = mpt.generate_long(model, input_tokens, return_prime=True)
+
+# Save output batch 0 to MIDI
+mpt.tokens_to_midi(output_tokens[0], model_with_velocity=False)
+```
+
+### Pitches inpainting
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model()
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[6][1]
+
+# Load seed MIDI
+input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=False)
+
+# Generate seed MIDI continuation
+output_tokens = mpt.inpaint_pitches(model, input_tokens)
+
+# Save output batch 0 to MIDI
+mpt.tokens_to_midi(output_tokens, model_with_velocity=False)
 ```
 
 ***
