@@ -239,7 +239,11 @@ def inpaint_pitches(model,
 
     #==================================================================
    
-    while pcount < num_pitches_to_inpaint or pcount < comp_total_pitches:
+    while pcount < num_pitches_to_inpaint and pcount < comp_total_pitches-1 and il_idx < len(inputs_list):
+        
+        if verbose:
+            if pcount % 25 == 0:
+                print(pcount, '/', comp_total_pitches-1)
 
         fp = True
 
