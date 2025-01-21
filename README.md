@@ -99,7 +99,7 @@ sample_midi_path = mpt.get_sample_midi_files()[6][1]
 # Load seed MIDI
 input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=False)
 
-# Generate seed MIDI continuation
+# Generate long seed MIDI auto-continuation
 output_tokens = mpt.generate_long(model, input_tokens, return_prime=True)
 
 # Save output batch 0 to MIDI
@@ -122,11 +122,57 @@ sample_midi_path = mpt.get_sample_midi_files()[6][1]
 # Load seed MIDI
 input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=False)
 
-# Generate seed MIDI continuation
+# Inpaint pitches
 output_tokens = mpt.inpaint_pitches(model, input_tokens)
 
-# Save output batch 0 to MIDI
+# Save output to MIDI
 mpt.tokens_to_midi(output_tokens, model_with_velocity=False)
+```
+
+### Simple velocities inpainting
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model(model_name='with velocity - 3 epochs')
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[6][1]
+
+# Load seed MIDI
+input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=True)
+
+# Inpaint velocities
+output_tokens = mpt.inpaint_velocities_simple(model, input_tokens)
+
+# Save output to MIDI
+mpt.tokens_to_midi(output_tokens, model_with_velocity=True)
+```
+
+### Seq2Seq velocities inpainting
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model(model_name='velocity inpainting - 3 epochs')
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[6][1]
+
+# Load seed MIDI
+input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=True)
+
+# Inpaint velocities
+output_tokens = mpt.inpaint_velocities_seq2seq(model, input_tokens, verbose=True)
+
+# Save output to MIDI
+mpt.tokens_to_midi(output_tokens, model_with_velocity=True)
 ```
 
 ***
