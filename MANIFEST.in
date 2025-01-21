@@ -3,4 +3,5 @@ recursive-include monsterpianotransformer/ *
 recursive-include monsterpianotransformer/seed_midis *
 recursive-include monsterpianotransformer/examples *
 recursive-include monsterpianotransformer/gradio *
+recursive-include monsterpianotransformer/training_code *
 recursive-include monsterpianotransformer/artwork *

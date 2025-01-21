@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "monsterpianotransformer"
-version = "25.1.34"
+version = "25.1.35"
 description = "Ultra-fast and very well fitted solo Piano music transformer"
 authors = [
     {name = "Alex Lev", email = "alexlev61@proton.me"}
@@ -24,6 +24,7 @@ dependencies = [
     "hf-transfer",
     "huggingface_hub"
 ]
+
 keywords = ["MIDI", "music", "music ai", "music transformer", "artificial instelligence"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -55,3 +56,6 @@ Issues = "https://github.com/asigalov61/monsterpianotransformer/issues"
 Discussions = "https://github.com/asigalov61/monsterpianotransformer/discussions"
 Models = "https://huggingface.co/asigalov61/Monster-Piano-Transformer"
 Demo = "https://huggingface.co/spaces/asigalov61/Monster-Piano-Transformer"
+
+[project.entry-points.console_scripts]
+monsterpianotransformer-gradio = "monsterpianotransformer.gradio.__main__:main"
