@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="monsterpianotransformer",
-    version="25.1.33",
+    version="25.1.34",
     description="Ultra-fast and very well fitted solo Piano music transformer",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -30,8 +30,13 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        'monsterpianotransformer': ['/', 'seed_midis/', 'examples/', 'artwork/'],
+        'monsterpianotransformer': ['/', 'seed_midis/', 'examples/', 'artwork/', 'gradio/'],
     },
+    entry_points={
+        "console_scripts": [
+            "monsterpianotransformer-gradio=monsterpianotransformer.gradio.__main__:main",
+        ],
+    }
     keywords=['MIDI', 'music', 'music ai', 'music transformer'],
     python_requires='>=3.6',
     license='Apache Software License 2.0',
