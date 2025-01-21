@@ -349,6 +349,9 @@ def inpaint_velocities_simple(model,
                     nv_score.append(nv_sc)
     
                 nv_sc = []
+                
+    if nv_score:
+        nv_score_list.append(nv_score)
 
     #=======================================================
 
@@ -412,8 +415,159 @@ def inpaint_velocities_simple(model,
 
 #===================================================================================================
 
-def inpaint_velocities_seq2seq():
-    return None
+def inpaint_velocities_seq2seq(model,
+                               input_tokens,
+                               temperature=1.5,
+                               verbose=False
+                              ):
+
+    if verbose:
+        print('=' * 70)
+        print('Inpainting velocities...')
+        print('=' * 70)
+        
+    #=======================================================
+
+    device = next(model.parameters()).device.type
+
+    #=======================================================
+
+    nv_score_list = []
+    nv_score = []
+    nv_sc = []
+    
+    for t in [t for t in input_tokens if t < 384]:
+        
+        if t < 128:
+            if nv_score:
+                nv_score_list.append(nv_score)
+                
+            nv_score = [[t]]
+    
+        else:
+            if t < 256:
+                nv_sc.append(t)
+    
+            else:
+                if nv_sc:
+                    nv_sc.append(t)
+                    nv_score.append(nv_sc)
+    
+                nv_sc = []
+                
+    if nv_score:
+        nv_score_list.append(nv_score)
+
+    nv_score = nv_score_list
+    
+    #=======================================================
+
+    final_vel_score = []
+    
+    score_sidx = 0
+    score_eidx = 0
+    
+    chunk_idx = 0
+    
+    half_chunk_len = 75
+    max_inputs_len = 600
+    
+    pvels = []
+
+    #=======================================================
+    
+    while score_sidx+score_eidx-half_chunk_len < len(nv_score)-1:
+
+        if verbose:
+            print('Inpainting chunk #', chunk_idx+1, '/', len(nv_score) // half_chunk_len)
+    
+        inputs = [512]
+    
+        half_notes_counter = 0
+        
+        for score_eidx, chord in enumerate(nv_score[score_sidx:]):
+        
+            if len(inputs) >= max_inputs_len:
+                break 
+            
+            inputs.append(chord[0][0])
+        
+            for note in chord[1:]:
+                inputs.extend(note)
+    
+                if score_eidx < half_chunk_len:
+                    half_notes_counter += 1
+        
+        inputs.append(513)
+        
+        inputs_len = len(inputs)
+    
+        #=======================================================
+    
+        pvels_count = 0
+        
+        for c, i in enumerate(range(score_sidx, score_sidx+score_eidx+1)):
+    
+            inputs.append(nv_score[i][0][0])
+        
+            for note in nv_score[i][1:]:
+    
+                if c == half_chunk_len:
+                    pvels = []
+                    pvels_count = 0
+        
+                inputs.extend(note)
+    
+                if pvels and pvels_count < len(pvels):
+                    inputs.append(pvels[pvels_count])
+    
+                else:
+        
+                    x = torch.LongTensor(inputs).cuda()
+            
+                    y = 0
+            
+                    while y < 384:
+                    
+                        with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                            
+                            out = model.generate(x,
+                                                 1,
+                                                 temperature=temperature,
+                                                 return_prime=False,
+                                                 verbose=False)
+                        
+                        y = out.tolist()[0][0]
+            
+                    inputs.append(y)
+        
+                    if c >= half_chunk_len:
+                        pvels.append(y)
+        
+                pvels_count += 1
+        
+        #=======================================================
+    
+        if score_sidx+score_eidx < len(nv_score)-1:
+            vel_score = inputs[inputs_len:][:half_chunk_len+(half_notes_counter * 3)]
+    
+        else:
+            vel_score = inputs[inputs_len:]
+    
+        final_vel_score.extend(vel_score)
+    
+        score_sidx += half_chunk_len
+    
+        chunk_idx += 1
+
+    #=======================================================
+    
+    if verbose:
+        print('=' * 70)
+        print('Done!')
+        print('=' * 70)
+        
+    return final_vel_score
 
 #===================================================================================================
 # This is the end of model_loader Python module
