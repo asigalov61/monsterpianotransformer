@@ -192,7 +192,7 @@ sample_midi_path = mpt.get_sample_midi_files()[6][1]
 input_tokens = mpt.midi_to_tokens(sample_midi_path)
 
 # Inpaint timings
-output_tokens = mpt.inpaint_timings(model, input_tokens, verbose=True)
+output_tokens = mpt.inpaint_timings(model, input_tokens)
 
 # Save output to MIDI
 mpt.tokens_to_midi(output_tokens)
@@ -215,7 +215,7 @@ sample_midi_path = mpt.get_sample_midi_files()[11][1]
 input_tokens = mpt.midi_to_tokens(sample_midi_path)
 
 # Inpaint bridge
-output_tokens = mpt.inpaint_bridge(model, input_tokens, verbose=True)
+output_tokens = mpt.inpaint_bridge(model, input_tokens)
 
 # Save output to MIDI
 mpt.tokens_to_midi(output_tokens)
