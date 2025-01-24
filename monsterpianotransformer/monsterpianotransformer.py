@@ -574,5 +574,299 @@ def inpaint_velocities_seq2seq(model,
     return final_vel_score
 
 #===================================================================================================
+
+def inpaint_timings(model,
+                    input_tokens,
+                    num_notes_to_inpaint=600,
+                    num_prime_notes=4,
+                    inpaint_dtimes = True,
+                    inpaint_durs = True,
+                    temperature=0.1,
+                    verbose=False
+                   ):
+
+    #==================================================================
+
+    if verbose:
+        print('=' * 70)
+        print('Inpainting timings...')
+        print('=' * 70)
+
+    #==================================================================
+
+    device = next(model.parameters()).device.type
+
+    #==================================================================
+
+    num_notes_to_inpaint = max(1, num_notes_to_inpaint)
+    num_prime_notes = max(0, min(2040, num_prime_notes))
+    
+    #=======================================================
+
+    inp_tokens = [t for t in input_tokens if t < 384]
+
+    #==================================================================
+
+    nv_score_list = []
+    nv_score = []
+    nv_sc = []
+    
+    for t in input_tokens:
+        if t < 128:
+            if nv_score:
+                nv_score_list.append(nv_score)
+                
+            nv_score = [[t]]
+    
+        else:
+            if t < 256:
+                nv_sc.append(t)
+    
+            else:
+                if nv_sc:
+                    nv_sc.append(t)
+                    nv_score.append(nv_sc)
+    
+                nv_sc = []
+                
+    if nv_score:
+        nv_score_list.append(nv_score)
+
+    #=======================================================
+
+    dtimes = []
+    durs = []
+    pitches = []
+    
+    for lst in nv_score_list:
+        dtimes.append(lst[0][0])
+
+        for i, l in enumerate(lst[1:]):
+            durs.append(l[0])
+
+            if i == 0:
+                pitches.append(l[1]+128)
+
+            else:
+                pitches.append(l[1])
+        
+   #=======================================================    
+
+    pitches_chunks = []
+    last_pchunk_len = 0
+    
+    for i in range(0, len(pitches), 250):
+    
+        pchunk = pitches[i:i+500]
+    
+        if len(pchunk) < 500:
+            last_pchunk_len = len(pchunk)
+            pc_mult = ((500 // len(pchunk))+1)
+            pchunk *= pc_mult
+            pchunk = pchunk[:500]
+        
+        pitches_chunks.append(pchunk)
+    
+        if len(pitches) <= 500:
+            break
+    
+    final_seq = []
+    
+    toks_counter = 0
+
+    notes_counter = 0
+    
+    for pcidx, pchunk in enumerate(pitches_chunks):
+        
+        if verbose:
+            print('Inpainting pitches chunk', pcidx, '/', len(pitches_chunks)-1)
+    
+        if pcidx == 0:
+            seq = [512] + pchunk + [513]
+    
+        else:
+            seq = [512] + pchunk + [513] + final_seq[-toks_counter:]
+    
+        if pcidx == 0:
+        
+            tidx = 0
+            didx = 0
+            
+            for i, p in enumerate(pchunk[:num_prime_notes]):
+                
+                seq.append(p)
+                
+                if p > 384:
+                    seq.append(dtimes[tidx])
+                    tidx += 1
+            
+                seq.append(durs[didx])
+                didx += 1
+    
+            npn = num_prime_notes
+    
+        elif 0 < pcidx < len(pitches_chunks)-2:
+            npn = 250
+    
+        elif pcidx == len(pitches_chunks)-1:
+            npn = 0
+        
+        toks_counter = 0
+    
+        for i, p in enumerate(pchunk[npn:]):
+    
+            seq.append(p)
+            
+            if i >= 250 or pcidx == len(pitches_chunks)-1 or npn == 250:
+                toks_counter += 1
+
+            notes_counter += 1
+        
+            if inpaint_dtimes:
+        
+                if p > 384:
+                    x = torch.LongTensor(seq).cuda()
+                    
+                    with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                        out = model.generate(x,
+                                             1,
+                                             temperature=temperature,
+                                             return_prime=False,
+                                             verbose=False)
+                    
+                    y = out.tolist()[0][0]
+                
+                    seq.append(y)
+    
+                    if i >= 250 or pcidx == len(pitches_chunks)-1 or npn == 250:
+                        toks_counter += 1
+        
+            else:
+                if p > 384:
+                    seq.append(dtimes[tidx])
+                    tidx += 1
+                    
+                    if i >= 250 or pcidx == len(pitches_chunks)-1 or npn == 250:
+                        toks_counter += 1
+        
+            if inpaint_durs:
+        
+                x = torch.LongTensor(seq).cuda()
+                
+                with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         return_prime=False,
+                                         verbose=False)
+                
+                y = out.tolist()[0][0]
+            
+                seq.append(y)
+                
+                if i >= 250 or pcidx == len(pitches_chunks)-1 or npn == 250:
+                    toks_counter += 1
+        
+            else:
+                seq.append(durs[didx+npn])
+                didx += 1
+                
+                if i >= 250 or pcidx == len(pitches_chunks)-1 or npn == 250:
+                    toks_counter += 1
+    
+            if pcidx == len(pitches_chunks)-1 and i == last_pchunk_len-1:
+                break
+
+            if notes_counter == num_notes_to_inpaint:
+                break
+
+        if pcidx == 0:
+            final_seq.extend(seq[502:])
+    
+        elif 0 < pcidx < len(pitches_chunks)-2:
+            final_seq.extend(seq[-toks_counter:])
+    
+        elif pcidx == len(pitches_chunks)-1:
+            final_seq.extend(seq[+toks_counter:])
+            
+        if notes_counter == num_notes_to_inpaint:
+            break
+            
+    #=======================================================
+    
+    if verbose:
+        print('=' * 70)
+        print('Done!')
+        print('=' * 70)
+        
+    return final_seq
+
+#===================================================================================================
+
+def inpaint_bridge(model,
+                   input_tokens,
+                   start_token_idx=0,
+                   temperature=0.9,
+                   verbose=False
+                  ):
+
+    #==================================================================
+
+    device = next(model.parameters()).device.type
+
+    #==================================================================
+
+    start_token_idx = max(0, start_token_idx)
+    
+    #=======================================================
+
+    if verbose:
+        print('=' * 70)
+        print('Inpainting bridge...')
+        print('=' * 70)
+
+    #==================================================================
+
+    chunk = input_tokens[start_token_idx:start_token_idx+1350]
+
+    if len(chunk) == 1350:
+
+        schunk = chunk[:450]
+        mchunk = chunk[425:925]
+        echunk = chunk[900:]
+    
+        seq = [384] + schunk + [385] + echunk + [386] + schunk[-25:]
+        
+        x = torch.LongTensor(seq).cuda()
+        
+        with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+            
+            out = model.generate(x,
+                                 450,
+                                 temperature=temperature,
+                                 return_prime=False,
+                                 verbose=verbose)
+        
+        y = out.tolist()
+    
+        output = schunk + y[0] + echunk
+        
+        if verbose:
+            print('=' * 70)
+            print('Done!')
+            print('=' * 70)
+            
+    else:
+        if verbose:
+            print('Bridge inpaiting requires an input_tokens sequence of at least 1350 tokens!')
+            print('=' * 70)
+
+        output = []
+        
+    #=======================================================
+    
+    return output
+
+#===================================================================================================
 # This is the end of model_loader Python module
 #===================================================================================================

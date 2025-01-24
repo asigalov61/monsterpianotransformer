@@ -38,7 +38,7 @@ def load_model(model_name='without velocity - 7 epochs',
     Load and initialize Giant Music Transformer model with specified parameters.
 
     Parameters:
-    model_name (str): The name of the model to load. Options include 'without velocity - 7 epochs', 'without velocity - 3 epochs', 'with velocity - 3 epochs' and 'velocity inpainting - 3 epochs'. Default and best model is 'without velocity - 7 epochs'.
+    model_name (str): The name of the model to load from MODELS_INFO dictionary. Default and the best model is 'without velocity - 7 epochs'.
     device (str): The computing device to use. Options include 'cpu' or 'cuda'. Default is 'cuda'.
     compile_mode (str): The torch.compile mode for the model. Options include 'default', 'reduce-overhead', 'max-autotune'. Default is 'max-autotune'.
     verbose (bool): Whether to print detailed information during the loading process. Default is False.
@@ -49,6 +49,8 @@ def load_model(model_name='without velocity - 7 epochs',
     Example use:
     
     import monsterpianotransformer as mpt
+    
+    print(mpt.MODELS_INFO)
     
     mpt_model = mpt.load_model()
     """
