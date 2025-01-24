@@ -175,6 +175,52 @@ output_tokens = mpt.inpaint_velocities_seq2seq(model, input_tokens, verbose=True
 mpt.tokens_to_midi(output_tokens, model_with_velocity=True)
 ```
 
+### Timings inpainting
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model('timings inpainting - 2 epochs')
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[6][1]
+
+# Load seed MIDI
+input_tokens = mpt.midi_to_tokens(sample_midi_path)
+
+# Inpaint timings
+output_tokens = mpt.inpaint_timings(model, input_tokens, verbose=True)
+
+# Save output to MIDI
+mpt.tokens_to_midi(output_tokens)
+```
+
+### Bridge inpainting
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model('bridge inpainting - 2 epochs')
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[11][1]
+
+# Load seed MIDI
+input_tokens = mpt.midi_to_tokens(sample_midi_path)
+
+# Inpaint bridge
+output_tokens = mpt.inpaint_bridge(model, input_tokens, verbose=True)
+
+# Save output to MIDI
+mpt.tokens_to_midi(output_tokens)
+```
+
 ***
 
 ### Project Los Angeles
