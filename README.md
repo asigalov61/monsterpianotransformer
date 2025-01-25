@@ -60,7 +60,9 @@ choco install fluidsynth
 
 ```sh
 # pip package includes a demo Gradio app without audio support
-# Please refer to monsterpianotransformer/gradio/app_full.py for a full version with fluidsynth audio support
+
+# Please refer to monsterpianotransformer/gradio/app_full.py
+# for a full version with fluidsynth audio support
 
 monsterpianotransformer-gradio
 ```
