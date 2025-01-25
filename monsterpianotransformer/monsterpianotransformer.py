@@ -806,6 +806,9 @@ def inpaint_timings(model,
 def inpaint_bridge(model,
                    input_tokens,
                    start_token_idx=0,
+                   inpaint_dtimes=True,
+                   inpaint_durs=True,
+                   return_parts=False,
                    temperature=0.9,
                    verbose=False
                   ):
@@ -836,20 +839,76 @@ def inpaint_bridge(model,
         echunk = chunk[900:]
     
         seq = [384] + schunk + [385] + echunk + [386] + schunk[-25:]
+
+        bridge_seq = []
+
+        for i, t in enumerate(mchunk[25:-25]):
+
+            if verbose:
+                if i % 25 == 0:
+                    print('Generated', i, '/', len(mchunk[25:-25]), 'tokens')
+
+            if 0 <= t < 128:
+                if inpaint_dtimes:
         
-        x = torch.LongTensor(seq).cuda()
-        
-        with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
-            
-            out = model.generate(x,
-                                 450,
-                                 temperature=temperature,
-                                 return_prime=False,
-                                 verbose=verbose)
-        
-        y = out.tolist()
+                    x = torch.LongTensor(seq).cuda()
+                    
+                    with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                        
+                        out = model.generate(x,
+                                             1,
+                                             temperature=temperature,
+                                             return_prime=False,
+                                             verbose=False)
+                    
+                    y = out.tolist()[0][0]
     
-        output = schunk + y[0] + echunk
+                    bridge_seq.append(y)
+                    seq.append(y)
+
+                else:
+                    bridge_seq.append(t)
+                    seq.append(t)
+
+            elif 128 <= t < 256:
+                if inpaint_durs:
+        
+                    x = torch.LongTensor(seq).cuda()
+                    
+                    with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                        
+                        out = model.generate(x,
+                                             1,
+                                             temperature=temperature,
+                                             return_prime=False,
+                                             verbose=False)
+                    
+                    y = out.tolist()[0][0]
+    
+                    bridge_seq.append(y)
+                    seq.append(y)
+
+                else:
+                    bridge_seq.append(t)
+                    seq.append(t)
+
+            else:
+                x = torch.LongTensor(seq).cuda()
+                
+                with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                    
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         return_prime=False,
+                                         verbose=False)
+                
+                y = out.tolist()[0][0]
+
+                bridge_seq.append(y)
+                seq.append(y)                
+            
+        output = schunk + bridge_seq + echunk
         
         if verbose:
             print('=' * 70)
@@ -864,8 +923,12 @@ def inpaint_bridge(model,
         output = []
         
     #=======================================================
-    
-    return output
+
+    if return_parts:
+        return [schunk, bridge_seq, echunk]
+
+    else:
+        return output
 
 #===================================================================================================
 # This is the end of model_loader Python module
