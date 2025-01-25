@@ -173,7 +173,7 @@ import monsterpianotransformer as mpt
 
 # Load desired Monster Piano Transformer model
 # There are several to choose from...
-model = mpt.load_model(model_name='velocity inpainting - 3 epochs')
+model = mpt.load_model(model_name='velocity inpainting - 2 epochs')
 
 # Get sample seed MIDI path
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
