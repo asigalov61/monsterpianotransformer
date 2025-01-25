@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "monsterpianotransformer"
-version = "25.1.40"
+version = "25.1.45"
 description = "Ultra-fast and very well fitted solo Piano music transformer"
 authors = [
     {name = "Alex Lev", email = "alexlev61@proton.me"}
@@ -22,7 +22,8 @@ dependencies = [
     "einops",
     "torch-summary",
     "hf-transfer",
-    "huggingface_hub"
+    "huggingface_hub",
+    "gradio"
 ]
 
 keywords = ["MIDI", "music", "music ai", "music transformer", "artificial instelligence"]

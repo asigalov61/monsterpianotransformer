@@ -1,16 +1,12 @@
 from setuptools import setup, find_packages
 import os
 
-# Install fluidsynth using apt
-# os.system('apt-get update && apt-get install -y fluidsynth')
-
-# Read the contents of your README file
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name="monsterpianotransformer",
-    version="25.1.40",
+    version="25.1.45",
     description="Ultra-fast and very well fitted solo Piano music transformer",
     long_description=long_description,
     long_description_content_type="text/markdown",
