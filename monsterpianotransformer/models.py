@@ -12,9 +12,9 @@ MODELS_HF_REPO_URL = 'https://huggingface.co/asigalov61/Monster-Piano-Transforme
 
 #===================================================================================================
 
-MODELS_INFO = {'without velocity - 7 epochs': 'Best model (without velocity) which was trained for 7 epochs on full Monster Piano dataset.',
-               'without velocity - 3 epochs': 'Comparison model (without velocity) which was trained for 3 epochs on full Monster Piano dataset.',
-               'with velocity - 3 epochs': 'Comparison model (with velocity) which was trained for 3 epochs on full Monster Piano dataset.',
+MODELS_INFO = {'without velocity - 7 epochs': 'Best auto-regressive model (without velocity) which was trained for 7 epochs on full Monster Piano dataset.',
+               'without velocity - 3 epochs': 'Comparison auto-regressive model (without velocity) which was trained for 3 epochs on full Monster Piano dataset.',
+               'with velocity - 3 epochs': 'Comparison auto-regressive model (with velocity) which was trained for 3 epochs on full Monster Piano dataset.',
                'velocity inpainting - 3 epochs': 'Seq2Seq model for velocity inpainting which was trained for 3 epochs on all compositions with expressive velocity in Monster Piano dataset.',
                'timings inpainting - 2 epochs': 'Seq2Seq model for start-times and durations inpainting which was trained for 2 epochs on full Monster Piano dataset.',
                'bridge inpainting - 2 epochs': 'Seq2Seq model for bridge inpainting which was trained for 2 epochs on full Monster Piano dataset.'
