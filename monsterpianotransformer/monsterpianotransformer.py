@@ -17,6 +17,8 @@ from .x_transformer_1_23_2 import top_p
 
 import random
 
+import copy
+
 #===================================================================================================
 
 def generate(model,
@@ -388,7 +390,7 @@ def inpaint_velocities_simple(model,
 
             inputs.extend(note[:-1])
             
-            x = torch.LongTensor(inputs[-num_memory_tokens:]).cuda()
+            x = torch.LongTensor(inputs[-num_memory_tokens:]).to(device)
     
             y = 0
     
@@ -527,7 +529,7 @@ def inpaint_velocities_seq2seq(model,
     
                 else:
         
-                    x = torch.LongTensor(inputs).cuda()
+                    x = torch.LongTensor(inputs).to(device)
             
                     y = 0
             
@@ -725,7 +727,7 @@ def inpaint_timings(model,
             if inpaint_dtimes:
         
                 if p > 384:
-                    x = torch.LongTensor(seq).cuda()
+                    x = torch.LongTensor(seq).to(device)
                     
                     with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
                         out = model.generate(x,
@@ -751,7 +753,7 @@ def inpaint_timings(model,
         
             if inpaint_durs:
         
-                x = torch.LongTensor(seq).cuda()
+                x = torch.LongTensor(seq).to(device)
                 
                 with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
                     out = model.generate(x,
@@ -851,7 +853,7 @@ def inpaint_bridge(model,
             if 0 <= t < 128:
                 if inpaint_dtimes:
         
-                    x = torch.LongTensor(seq).cuda()
+                    x = torch.LongTensor(seq).to(device)
                     
                     with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
                         
@@ -873,7 +875,7 @@ def inpaint_bridge(model,
             elif 128 <= t < 256:
                 if inpaint_durs:
         
-                    x = torch.LongTensor(seq).cuda()
+                    x = torch.LongTensor(seq).to(device)
                     
                     with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
                         
@@ -893,7 +895,7 @@ def inpaint_bridge(model,
                     seq.append(t)
 
             else:
-                x = torch.LongTensor(seq).cuda()
+                x = torch.LongTensor(seq).to(device)
                 
                 with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
                     
@@ -929,6 +931,181 @@ def inpaint_bridge(model,
 
     else:
         return output
+
+#===================================================================================================
+
+def generate_chord(model,
+                   input_tokens=[],
+                   chord_dtime=-1,
+                   chord_dur=-1,
+                   chord_vel=-1,
+                   chord_tok=-1,
+                   chord_tok_tries=320,
+                   max_num_pitches=-1,
+                   temperature=0.9,
+                   return_prime=False,
+                   model_with_velocity=False,
+                   verbose=False
+                  ):
+
+    #==================================================================
+
+    def trim_inp_seq(inp_seq, inp_seq_type):
+        
+        iseq = reversed(inp_seq)
+    
+        for i, t in enumerate(iseq):
+            if t > inp_seq_type:
+                if i > 0:
+                    return inp_seq[:-i]
+    
+                else:
+                    return inp_seq
+
+    #==================================================================
+
+    device = next(model.parameters()).device.type
+
+    #==================================================================
+
+    if verbose:
+        print('=' * 70)
+        print('Generating chord...')
+
+    #=====================================================================
+
+    if model_with_velocity:
+        inp_seq_type = 384
+
+    else:
+        inp_seq_type = 256
+        input_tokens = [t for t in input_tokens if t < 384]
+    
+    if input_tokens:
+        
+        input_tokens = trim_inp_seq(input_tokens, inp_seq_type)
+        inp_toks = input_tokens
+
+        if not inp_toks:
+            inp_toks = [max(chord_dtime, 0)]
+
+    else:
+        inp_toks = [max(chord_dtime, 0)]
+
+    #=====================================================================
+
+    if inp_toks[-1] > 127:
+
+        x = torch.LongTensor(inp_toks).to(device)
+    
+        y = 128
+    
+        while y > 127:
+    
+            with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+            
+                out = model.generate(x,
+                                     1,
+                                     temperature=temperature,
+                                     return_prime=False,
+                                     verbose=False
+                                    )
+                                        
+            y = out.tolist()[0][0]
+    
+        inp_toks.append(y)
+
+    #=====================================================================
+
+    inp_toks_copy = copy.deepcopy(inp_toks)
+
+    ctok = 322
+    tries = 0
+
+    while chord_tok != ctok and tries < chord_tok_tries:
+
+        inp_toks = copy.deepcopy(inp_toks_copy)
+
+        pcount = 0
+        pitches = []
+    
+        y = 512
+    
+        while y > 127:
+    
+            x = torch.LongTensor(inp_toks).to(device)
+    
+            with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+            
+                out = model.generate(x,
+                                     1,
+                                     temperature=temperature,
+                                     return_prime=False,
+                                     verbose=False
+                                    )
+                                        
+            y = out.tolist()[0][0]
+    
+            if y > 127:
+                
+                if 128 < y < 256 and 0 < chord_dur < 128:
+                    inp_toks.append(chord_dur+128)
+    
+                elif 384 < y < 512 and 0 < chord_vel < 128:
+                    inp_toks.append(chord_vel+384)
+    
+                else:
+                    inp_toks.append(y)
+    
+            if 256 < y < 384:
+                pitches.append(y-256)
+                
+                tones_chord = sorted(set([p % 12 for p in pitches]))
+                
+                if tones_chord in TMIDIX.ALL_CHORDS_SORTED:
+                    ctok = TMIDIX.ALL_CHORDS_SORTED.index(tones_chord)
+
+                else:
+                    ctok = 321
+                    
+            if y > inp_seq_type:
+                pcount += 1
+
+            if ctok == chord_tok or ctok == 321:
+                break
+    
+            if max_num_pitches > 0 and pcount == max_num_pitches:
+                break
+                
+        if chord_tok == -1:
+            tries = chord_tok_tries
+            ctok = -1
+
+        tries += 1
+
+    if tries == chord_tok_tries:
+        inp_toks = []
+                
+    #=====================================================================
+
+    if verbose:
+        print('=' * 70)
+        print('Done!')
+        print('=' * 70)
+
+    #=====================================================================
+
+    if return_prime:
+        return inp_toks
+
+    else:
+
+        plen = 0
+
+        if input_tokens:
+            plen = len(input_tokens)-1
+     
+        return inp_toks[plen:]
 
 #===================================================================================================
 # This is the end of model_loader Python module
