@@ -234,6 +234,20 @@ output_tokens = mpt.inpaint_bridge(model, input_tokens)
 mpt.tokens_to_midi(output_tokens)
 ```
 
+### Single chord generation
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model()
+
+# Generate single chord
+chord_tokens = mpt.generate_chord(model)
+```
+
 ***
 
 ### Project Los Angeles
