@@ -35,19 +35,20 @@ def generate(model,
         print('=' * 70)
 
     device = next(model.parameters()).device.type
+    max_seq_len = model.max_seq_len
    
     with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
         
-        num_gen_tokens = max(1, min(2047, num_gen_tokens))
+        num_gen_tokens = max(1, min(max_seq_len-1, num_gen_tokens))
         
         prime = input_tokens
 
-        if len(input_tokens) <= (2048 - num_gen_tokens):
+        if len(input_tokens) <= (max_seq_len - num_gen_tokens):
             
             inputs = input_tokens
             
         else:
-            inputs = input_tokens[-(2048 - num_gen_tokens):]         
+            inputs = input_tokens[-(max_seq_len - num_gen_tokens):]         
             
         x = torch.LongTensor([inputs] * num_batches).to(device)
         
@@ -107,11 +108,12 @@ def generate_long(model,
         print('Starting generation...')
 
     device = next(model.parameters()).device.type
+    max_seq_len = model.max_seq_len
    
     with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
         
-        num_gen_tokens = max(1, min(2047, num_gen_tokens))
-        num_mem_tokens = 2048-num_gen_tokens
+        num_gen_tokens = max(1, min(max_seq_len-1, num_gen_tokens))
+        num_mem_tokens = max_seq_len-num_gen_tokens
 
         prime = input_tokens
 
@@ -1106,6 +1108,240 @@ def generate_chord(model,
             plen = len(input_tokens)-1
      
         return inp_toks[plen:]
+
+#===================================================================================================
+
+def generate_chords_pitches(model,
+                            input_chords_tokens,
+                            num_gen_chords=128,
+                            temperature=0.9,
+                            top_p_value=0.0,
+                            return_chords_tokens=False,
+                            verbose=False
+                           ):
+
+    #========================================================================
+        
+    if verbose:
+        print('=' * 70)
+
+    #========================================================================
+
+    device = next(model.parameters()).device.type
+    max_seq_len = model.max_seq_len
+
+    #========================================================================
+   
+    num_gen_chords = max(1, num_gen_chords)
+
+    #========================================================================
+
+    if 0 <= min(input_chords_tokens) < 321 and 0 <= max(input_chords_tokens) < 321:
+        input_chords_tokens = [t+128 for t in input_chords_tokens]
+
+    if not 128 <= min(input_chords_tokens) < 441 and not 128 <= min(input_chords_tokens) < 441:
+        
+        if verbose:
+            print('Input chords tokens sequence is out of range(128, 441)!')
+            print('=' * 70)
+            
+        return []
+
+    #========================================================================
+
+    if verbose:
+        print('Generating...')
+
+    inputs = []
+    outputs = []
+
+    for i in range(num_gen_chords):
+
+        if verbose:
+            if (i+1) % 8 == 0:
+                print('Generating', i+1, '/', num_gen_chords, 'chords')
+
+        inputs = inputs[-(max_seq_len - 32):]
+
+        inputs.append(input_chords_tokens[i])
+
+        outp = []
+
+        if return_chords_tokens:
+            outp.append(input_chords_tokens[i])
+
+        y = 0
+
+        while y < 128:
+        
+            x = torch.LongTensor(inputs).to(device)
+            
+            if 0.0 < top_p_value < 1.0:
+                
+                with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         filter_logits_fn=top_p,
+                                         filter_kwargs={'thres': top_p_value},
+                                         return_prime=False,
+                                         verbose=False
+                                        )
+                
+            else:
+                
+                with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         return_prime=False,
+                                         verbose=False
+                                        )
+            
+            y = out.tolist()[0][0]
+
+            if y < 128:
+                inputs.append(y)
+                outp.append(y)
+
+        outputs.append(outp)
+
+    #========================================================================
+                
+    if verbose:
+        print('=' * 70)
+        print('Done!')
+        print('=' * 70)
+
+    #========================================================================
+
+    return outputs
+
+#===================================================================================================
+
+def texture_chords(model,
+                   midi_chords_list,
+                   num_tex_chords=256,
+                   num_memory_tokens=2040,
+                   temperature=1.0,
+                   top_p_value=0.96,
+                   match_pitches_counts=False,
+                   keep_high_pitch=True,
+                   output_velocities=True,
+                   verbose=False
+                  ):
+    
+    #========================================================================
+        
+    if verbose:
+        print('=' * 70)
+        print('Texturing chords...')
+
+    #========================================================================
+
+    device = next(model.parameters()).device.type
+
+    #========================================================================
+    
+    num_memory_tokens = max(1, min(2047, num_memory_tokens))
+    num_tex_chords = max(1, num_tex_chords)
+
+    #========================================================================
+
+    if len(midi_chords_list[0]) != 4:
+        
+        if verbose:
+            print('Chords texturing requires MIDI chords list with timings, durations and velocities!')
+            
+        return []
+        
+    #========================================================================
+    
+    inputs = []
+    outputs = []
+
+    pt = midi_chords_list[0][1][0]
+    
+    for i in range(len(midi_chords_list[:num_tex_chords])):
+
+        if verbose:
+            if (i+1) % 8 == 0:
+                print('Textured', i+1, '/', len(midi_chords_list[:num_tex_chords]), 'chords')
+    
+        inputs.append(midi_chords_list[i][0][0]+128)
+
+        dtime = midi_chords_list[i][1][0]-pt
+
+        outputs.append(dtime)
+
+        pt = midi_chords_list[i][1][0]
+    
+        y = 0
+        count = 0
+        pcount = False
+
+        chord_len = len(midi_chords_list[i][0][1:])
+
+        dur = midi_chords_list[i][2][0]
+        vel = midi_chords_list[i][3][0]
+
+        if keep_high_pitch:
+            inputs.append(midi_chords_list[i][0][1])
+            outputs.extend([dur+128, midi_chords_list[i][0][1]+256])
+
+            if output_velocities:
+                outputs.append(vel+384)
+                
+            count += 1
+
+            if chord_len == 1:
+                pcount = True
+    
+        while y < 128 and not pcount: # and count < chords_lens[i]:
+
+            inputs = inputs[-num_memory_tokens:]
+    
+            x = torch.LongTensor(inputs).cuda()
+            
+            with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
+                
+                out = model.generate(x,
+                                     1,
+                                     temperature=temperature,
+                                     filter_logits_fn=top_p,
+                                     filter_kwargs={'thres': top_p_value},
+                                     return_prime=False,
+                                     verbose=False)
+            
+            y = out.tolist()[0][0]
+    
+            if y < 128:
+                inputs.append(y)
+                outputs.extend([dur+128, y+256])
+
+                if output_velocities:
+                    outputs.append(vel+384)
+                    
+                count += 1
+
+            if match_pitches_counts:
+                if count == chord_len:
+                    pcount = True
+
+            else:
+                if y > 127:
+                    pcount = True
+
+    #========================================================================
+                
+    if verbose:
+        print('=' * 70)
+        print('Done!')
+        print('=' * 70)
+
+    #========================================================================
+    
+    return outputs
 
 #===================================================================================================
 # This is the end of model_loader Python module

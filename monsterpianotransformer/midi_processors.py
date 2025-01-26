@@ -151,5 +151,80 @@ def midi_to_chords(input_midi,
     return output
 
 #===================================================================================================
+
+def chords_pitches_to_midi(chords_pitches,
+                           midi_chords_list=[[]],
+                           chords_dtimes=-1,
+                           chords_durs=-1,
+                           chords_vels=-1,
+                           output_midi_name='Monster-Piano-Transformer-Composition',
+                           return_score=False
+                          ):
+
+    cpitches = []
+
+    for cp in chords_pitches:
+        cpitches.append([c for c in cp if 0 < c < 128])
+
+    if len(midi_chords_list[0]) == 4:
+        song_len = min(len(chords_pitches), len(midi_chords_list))
+
+    else:
+        song_len = len(chords_pitches)
+
+    time = 0
+    dtime = 8
+    dur = 8
+
+    song = []
+
+    patches = [0] * 16
+
+    for i in range(song_len):
+
+        if chords_dtimes < 1 and len(midi_chords_list[0]) == 4:
+            time = midi_chords_list[i][1][0]
+
+        if chords_durs < 1 and len(midi_chords_list[0]) == 4:
+            dur = midi_chords_list[i][2][0]
+
+        elif chords_durs > 0:
+            dur = chords_durs
+
+        if chords_vels == -1 and len(midi_chords_list[0]) == 4:
+            vel = midi_chords_list[i][3][0]
+
+        elif chords_vels > 0:
+            vel = chords_vels
+
+        for p in chords_pitches[i]:
+
+            if chords_vels == -1 and len(midi_chords_list[0]) != 4:
+                vel = max(40, p)
+            
+            song.append(['note', time, dur, 0, p, vel, 0])
+
+        if chords_dtimes > 0:
+            time += chords_dtimes
+
+        elif chords_dtimes < 1 and len(midi_chords_list[0]) != 4:
+            time += dtime
+        
+    detailed_stats = TMIDIX.Tegridy_ms_SONG_to_MIDI_Converter(song,
+                                                              output_signature = 'Monster Piano Transformer',
+                                                              output_file_name = output_midi_name,
+                                                              track_name='Project Los Angeles',
+                                                              list_of_MIDI_patches=patches,
+                                                              timings_multiplier=32,
+                                                              verbose=False
+                                                             )
+    
+    if return_score:
+        return song_f
+
+    else:
+        return detailed_stats
+    
+#===================================================================================================
 # This is the end of midi_processors Python module
 #===================================================================================================
