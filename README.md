@@ -453,5 +453,45 @@ output_tokens = mpt.inpaint_timings(tim_model, cptcs_tokens)
 mpt.tokens_to_midi(output_tokens)
 ```
 
+***
+
+## Dev and tests
+
+### Loading
+
+```python
+# You can load and use one or several models at the time
+
+# Default model (without velocity - 3 epochs)
+default_model = mpt.load_model()
+
+# More models...
+cp_model = mpt.load_model('chords progressions - 3 epochs')
+tex_model = mpt.load_model('chords texturing - 3 epochs')
+tim_model = mpt.load_model('timings inpainting - 2 epochs')
+```
+
+### Parameters
+
+```python
+# Dev models parameters can be accessed like so
+
+# Max sequence length
+print(default_model.max_seq_len)
+
+# Max number of tokens
+print(default_model.pad_value)
+```
+
+### Generation
+
+```python
+# Use generate or generate long functions for dev or testing with all models
+
+# Just make sure to prime the models with at least one token within its tokens range
+default_output = mpt.generate(default_model, input_tokens=[0], num_gen_tokens=32)
+tex_output = mpt.generate_long(tex_model, input_tokens=[0], num_gen_tokens=32)
+```
+
 ### Project Los Angeles
 ### Tegridy Code 2025
