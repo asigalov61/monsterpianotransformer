@@ -248,6 +248,29 @@ model = mpt.load_model()
 output_tokens = mpt.generate_chord(model)
 ```
 
+### Chords texturing
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model('chords texturing - 3 epochs')
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[6][1]
+
+# Convert MIDI to chords list
+chords_list = mpt.midi_to_chords(sample_midi_path)
+
+# Texture chords
+output_tokens = mpt.texture_chords(model, chords_list)
+
+# Save output to MIDI
+mpt.tokens_to_midi(output_tokens)
+```
+
 ***
 
 ### Project Los Angeles
