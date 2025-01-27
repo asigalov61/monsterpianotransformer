@@ -248,6 +248,37 @@ model = mpt.load_model()
 output_tokens = mpt.generate_chord(model)
 ```
 
+### Chords progressions
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+model = mpt.load_model('chords progressions - 3 epochs')
+
+# Prime chord(s) as a list of lists of semitones and/or pitches
+prime_chords = [
+                [0],
+                [0, 2],
+                [0, 2, 4],
+                [60],
+                [60, 62]
+               ]
+
+# Convert chords to chords tokens
+chords_tokens = mpt.chords_to_chords_tokens(prime_chords)
+
+# Generate chord progression continuation
+output_tokens = mpt.generate(model, chords_tokens, num_gen_tokens=32, return_prime=True)
+
+# Convert output tokens batch # 0 back to the chords list
+chords_list = mpt.chords_tokens_to_chords(output_tokens[0])
+
+print(chords_list)
+```
+
 ### Chords texturing
 
 ```python
