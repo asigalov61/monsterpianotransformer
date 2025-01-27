@@ -6,6 +6,8 @@
 ***
 
 ```
+Monster Piano by QVQ 7B
+
 In the heart of a grand piano black and blue,  
 A fuzzy monster with eyes of yellow hue,  
 Its fingers dance upon the ivory keys,  
