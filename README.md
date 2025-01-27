@@ -484,7 +484,7 @@ sample_notes_list = [
 ]
 
 # Use notes_list_to_tokens_sequence function to convert the notes list
-tokens_seq, chords_list, pitches_list = mpt.notes_list_to_tokens_sequence(sample_notes_list)
+tokens_seq, chords_list, pitches_list = mpt.notes_list_to_tokens_chords_pitches(sample_notes_list)
 ```
 
 ***
