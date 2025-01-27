@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="monsterpianotransformer",
-    version="25.1.86",
+    version="25.1.87",
     description="Ultra-fast and very well fitted solo Piano music transformer",
     long_description=long_description,
     long_description_content_type="text/markdown",
