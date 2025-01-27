@@ -260,8 +260,6 @@ model = mpt.load_model()
 
 # Generate single chord
 output_tokens = mpt.generate_chord(model)
-
-print(output_tokens)
 ```
 
 ### Chords progressions
@@ -291,8 +289,6 @@ output_tokens = mpt.generate(model, chords_tokens, num_gen_tokens=32, return_pri
 
 # Convert output tokens batch # 0 back to the chords list
 chords_list = mpt.chords_tokens_to_chords(output_tokens[0])
-
-print(chords_list)
 ```
 
 ### Chords texturing
@@ -516,10 +512,10 @@ tim_model = mpt.load_model('timings inpainting - 2 epochs')
 # Dev models parameters can be accessed like so
 
 # Max sequence length
-print(default_model.max_seq_len)
+default_model.max_seq_len
 
 # Max number of tokens
-print(default_model.pad_value)
+default_model.pad_value
 ```
 
 ### Generation
