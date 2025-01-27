@@ -110,13 +110,13 @@ model = mpt.load_model()
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=False)
+input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=False)
 
 # Generate long seed MIDI auto-continuation
 output_tokens = mpt.generate_long(model, input_tokens, return_prime=True)
 
 # Save output batch 0 to MIDI
-mpt.tokens_to_midi(output_tokens[0], model_with_velocity=False)
+mpt.tokens_to_midi(output_tokens[0])
 ```
 
 ### Pitches inpainting
@@ -133,13 +133,13 @@ model = mpt.load_model()
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=False)
+input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=False)
 
 # Inpaint pitches
 output_tokens = mpt.inpaint_pitches(model, input_tokens)
 
 # Save output to MIDI
-mpt.tokens_to_midi(output_tokens, model_with_velocity=False)
+mpt.tokens_to_midi(output_tokens)
 ```
 
 ### Simple velocities inpainting
@@ -156,13 +156,13 @@ model = mpt.load_model(model_name='with velocity - 3 epochs')
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=True)
+input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=True)
 
 # Inpaint velocities
 output_tokens = mpt.inpaint_velocities_simple(model, input_tokens)
 
 # Save output to MIDI
-mpt.tokens_to_midi(output_tokens, model_with_velocity=True)
+mpt.tokens_to_midi(output_tokens)
 ```
 
 ### Seq2Seq velocities inpainting
@@ -179,13 +179,13 @@ model = mpt.load_model(model_name='velocity inpainting - 2 epochs')
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=True)
+input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=True)
 
 # Inpaint velocities
 output_tokens = mpt.inpaint_velocities_seq2seq(model, input_tokens, verbose=True)
 
 # Save output to MIDI
-mpt.tokens_to_midi(output_tokens, model_with_velocity=True)
+mpt.tokens_to_midi(output_tokens)
 ```
 
 ### Timings inpainting
@@ -245,7 +245,7 @@ import monsterpianotransformer as mpt
 model = mpt.load_model()
 
 # Generate single chord
-chord_tokens = mpt.generate_chord(model)
+output_tokens = mpt.generate_chord(model)
 ```
 
 ***
