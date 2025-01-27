@@ -23,6 +23,75 @@ import copy
 
 #===================================================================================================
 
+def chords_to_chords_tokens(chords_list, 
+                            chords_tokens_shift=0,
+                            fix_bad_chords=True,
+                            verbose=False
+                           ):
+
+    if verbose:
+        print('=' * 70)
+
+    c_list = []
+
+    for cho in chords_list:
+        
+        c = sorted(set(cho))
+        
+        c_list.append([cc % 12 for cc in c if cc >= 0])
+
+    chords_tokens = []
+    
+    for i, chord in enumerate(c_list):
+    
+        if chord in TMIDIX.ALL_CHORDS_SORTED:
+            chords_tokens.append(TMIDIX.ALL_CHORDS_SORTED.index(chord))
+    
+        else:
+            if fix_bad_chords:
+                fixed_chord = TMIDIX.check_and_fix_tones_chord(chord)
+                chords_tokens.append(TMIDIX.ALL_CHORDS_SORTED.index(fixed_chord))
+    
+            else:
+                if verbose:
+                    print('Bad chord', c_list[i], 'at index', i)
+                    
+    if verbose:
+        print('Done!')
+        print('=' * 70)
+        
+    return chords_tokens
+
+#===================================================================================================
+
+def chords_tokens_to_chords(chords_tokens, 
+                            chords_tokens_shift=0,
+                            base_pitch=0,
+                            reverse_sort=False,
+                            verbose=False
+                           ):
+
+    if verbose:
+        print('=' * 70)
+
+    c_tokens = [t for t in chords_tokens if 0 <= t-chords_tokens_shift < 321]
+
+    chords = []
+
+    for t in c_tokens:
+        
+        tones_chord = TMIDIX.ALL_CHORDS_SORTED[t-chords_tokens_shift]
+
+        chords.append(sorted([t+base_pitch for t in tones_chord], reverse=reverse_sort))
+        
+    if verbose:
+        print('Done!')
+        print('=' * 70)
+
+    return chords
+
+#===================================================================================================
+
 def generate(model,
              input_tokens,
              num_gen_tokens=600,
@@ -617,7 +686,7 @@ def inpaint_timings(model,
     nv_score = []
     nv_sc = []
     
-    for t in input_tokens:
+    for t in inp_tokens:
         if t < 128:
             if nv_score:
                 nv_score_list.append(nv_score)
@@ -797,7 +866,11 @@ def inpaint_timings(model,
             
         if notes_counter == num_notes_to_inpaint:
             break
-            
+    
+    #=======================================================
+        
+    output = [(t % 128)+256 if 256 < t < 512 else t for t in final_seq]
+    
     #=======================================================
     
     if verbose:
@@ -805,7 +878,7 @@ def inpaint_timings(model,
         print('Done!')
         print('=' * 70)
         
-    return final_seq
+    return output
 
 #===================================================================================================
 
@@ -1120,10 +1193,15 @@ def generate_chord(model,
 
 def generate_chords_pitches(model,
                             input_chords_tokens,
+                            prime_chords_pitches=[],
                             num_gen_chords=128,
                             temperature=0.9,
                             top_p_value=0.0,
                             return_chords_tokens=False,
+                            return_as_tokens_seq=False,
+                            tokens_seq_dtimes=8,
+                            tokens_seq_durs=8,
+                            tokens_seq_vels=-1,
                             verbose=False
                            ):
 
@@ -1139,7 +1217,7 @@ def generate_chords_pitches(model,
 
     #========================================================================
    
-    num_gen_chords = max(1, num_gen_chords)
+    num_gen_chords = max(1, min(num_gen_chords, len(input_chords_tokens)))
 
     #========================================================================
 
@@ -1153,29 +1231,44 @@ def generate_chords_pitches(model,
             print('=' * 70)
             
         return []
-
+    
     #========================================================================
-
+    
     if verbose:
         print('Generating...')
 
     inputs = []
     outputs = []
+    
+    sidx = 0
+    
+    if len(prime_chords_pitches) > 0:
+        for i, p in enumerate(prime_chords_pitches[:num_gen_chords]):
+            
+            inputs.append(input_chords_tokens[i])
+            inputs.extend(p)
+            
+            if return_chords_tokens:
+                outputs.append([input_chords_tokens[i]] + p)
+            else:
+                outputs.append(p)
+                
+        sidx = i+1
 
-    for i in range(num_gen_chords):
+    for i in range(num_gen_chords-sidx):
 
         if verbose:
             if (i+1) % 8 == 0:
-                print('Generating', i+1, '/', num_gen_chords, 'chords')
+                print('Generated', i+1, '/', num_gen_chords, 'chords')
 
         inputs = inputs[-(max_seq_len - 32):]
 
-        inputs.append(input_chords_tokens[i])
+        inputs.append(input_chords_tokens[sidx+i])
 
         outp = []
 
         if return_chords_tokens:
-            outp.append(input_chords_tokens[i])
+            outp.append(input_chords_tokens[sidx+i])
 
         y = 0
 
@@ -1214,20 +1307,54 @@ def generate_chords_pitches(model,
         outputs.append(outp)
 
     #========================================================================
+        
+    if return_as_tokens_seq:
+        
+        if return_chords_tokens:
+            sidx = 1
+            
+        else:
+            sidx = 0
+            
+        tokens_seq = []
+            
+        for i, p in enumerate(outputs):
+            
+            if i == 0:
+                tokens_seq.append(0)
                 
+            else:
+                tokens_seq.append(tokens_seq_dtimes)
+            
+            for pp in p[sidx:]:
+                tokens_seq.extend([tokens_seq_durs+128, pp+256])
+                
+                if tokens_seq_vels < 1:
+                    tokens_seq.append(max(40, pp)+384)
+                    
+                else:
+                    tokens_seq.append((tokens_seq_vels % 128)+384)
+                    
+    #========================================================================
+
     if verbose:
         print('=' * 70)
         print('Done!')
         print('=' * 70)
 
     #========================================================================
-
-    return outputs
+    
+    if return_as_tokens_seq:
+        return tokens_seq
+    
+    else:
+        return outputs
 
 #===================================================================================================
 
 def texture_chords(model,
                    midi_chords_list,
+                   num_prime_chords=8,
                    num_tex_chords=256,
                    num_memory_tokens=2040,
                    temperature=1.0,
@@ -1251,6 +1378,7 @@ def texture_chords(model,
     #========================================================================
     
     num_memory_tokens = max(1, min(2047, num_memory_tokens))
+    num_prime_chords = max(0, min(len(midi_chords_list)-2, num_prime_chords))
     num_tex_chords = max(1, num_tex_chords)
 
     #========================================================================
@@ -1266,35 +1394,62 @@ def texture_chords(model,
     
     inputs = []
     outputs = []
-
+    
+    #========================================================================
+    
     pt = midi_chords_list[0][1][0]
     
-    for i in range(len(midi_chords_list[:num_tex_chords])):
+    for c in midi_chords_list[:num_prime_chords]:
+        
+        inputs.append(c[0][0]+128)
+        
+        dtime = c[1][0]-pt
+
+        outputs.append(dtime)
+        
+        dur = c[2][0]
+        vel = c[3][0]
+        
+        for ptc in c[0][1:]:
+        
+            inputs.append(ptc)
+            outputs.extend([dur+128, ptc+256])
+
+            if output_velocities:
+                outputs.append(vel+384)
+
+        pt = c[1][0]
+        
+    #========================================================================
+
+    for i in range(len(midi_chords_list[num_prime_chords:num_prime_chords+num_tex_chords])):
 
         if verbose:
             if (i+1) % 8 == 0:
-                print('Textured', i+1, '/', len(midi_chords_list[:num_tex_chords]), 'chords')
+                print('Textured', i+1, '/', len(midi_chords_list[num_prime_chords:num_prime_chords+num_tex_chords]), 'chords')
+                
+        idx = num_prime_chords + i
     
-        inputs.append(midi_chords_list[i][0][0]+128)
+        inputs.append(midi_chords_list[idx][0][0]+128)
 
-        dtime = midi_chords_list[i][1][0]-pt
+        dtime = midi_chords_list[idx][1][0]-pt
 
         outputs.append(dtime)
 
-        pt = midi_chords_list[i][1][0]
+        pt = midi_chords_list[idx][1][0]
     
         y = 0
         count = 0
         pcount = False
 
-        chord_len = len(midi_chords_list[i][0][1:])
+        chord_len = len(midi_chords_list[idx][0][1:])
 
-        dur = midi_chords_list[i][2][0]
-        vel = midi_chords_list[i][3][0]
+        dur = midi_chords_list[idx][2][0]
+        vel = midi_chords_list[idx][3][0]
 
         if keep_high_pitch:
-            inputs.append(midi_chords_list[i][0][1])
-            outputs.extend([dur+128, midi_chords_list[i][0][1]+256])
+            inputs.append(midi_chords_list[idx][0][1])
+            outputs.extend([dur+128, midi_chords_list[idx][0][1]+256])
 
             if output_velocities:
                 outputs.append(vel+384)
@@ -1304,7 +1459,7 @@ def texture_chords(model,
             if chord_len == 1:
                 pcount = True
     
-        while y < 128 and not pcount: # and count < chords_lens[i]:
+        while y < 128 and not pcount:
 
             inputs = inputs[-num_memory_tokens:]
     

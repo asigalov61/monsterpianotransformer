@@ -12,8 +12,13 @@ from . import TMIDIX
 #===================================================================================================
 
 def midi_to_tokens(input_midi,
-                   encode_velocity=False
+                   encode_velocity=False,
+                   verbose=False
                    ):
+
+    if verbose:
+        print('=' * 70)
+        print('Encoding MIDI...')
 
     raw_score = TMIDIX.midi2single_track_ms_score(input_midi)
     
@@ -29,7 +34,9 @@ def midi_to_tokens(input_midi,
     
     pc = cscore[0]
     
-    for c in cscore:
+    notes_counter = 0
+    
+    for i, c in enumerate(cscore):
         score.append(max(0, min(127, c[0][1]-pc[0][1])))
     
         for n in c:
@@ -38,9 +45,24 @@ def midi_to_tokens(input_midi,
 
             else:
                 score.extend([max(1, min(127, n[2]))+128, max(1, min(127, n[4]))+256])
+                
+            notes_counter += 1
     
         pc = c
-
+        
+    if verbose:
+        print('Done!')
+        print('=' * 70)
+        
+        print('Source MIDI composition has', len(zscore), 'notes')
+        print('Source MIDI composition has', len(cscore), 'chords')
+        print('-' * 70)
+        print('Encoded sequence has', notes_counter, 'pitches')
+        print('Encoded sequence has', i+1, 'chords')
+        print('-' * 70)
+        print('Final encoded sequence has', len(score), 'tokens')
+        print('=' * 70)
+        
     return score
 
 #===================================================================================================
@@ -58,7 +80,7 @@ def tokens_to_midi(tokens,
     
     if verbose:
         print('=' * 70)
-        print('Encoding tokens...')
+        print('Decoding tokens...')
     
     if [t for t in tokens if 384 < t < 512]:
         model_with_velocity = True
@@ -144,9 +166,14 @@ def midi_to_chords(input_midi,
                    return_times=True,
                    return_durs=True,
                    return_vels=True,
-                   return_only_chords=False
+                   return_only_chords=False,
+                   verbose=False
                   ):
-
+    
+    if verbose:
+        print('=' * 70)
+        print('Encoding MIDI...')
+        
     raw_score = TMIDIX.midi2single_track_ms_score(input_midi)
     escore_notes = TMIDIX.advanced_score_processor(raw_score, return_enhanced_score_notes=True)[0]
     escore_notes = TMIDIX.augment_enhanced_score_notes(escore_notes, timings_divider=32)
@@ -162,9 +189,12 @@ def midi_to_chords(input_midi,
 
     output = []
     
-    for c in cscore:
+    pitches_counter = 0
+    
+    for i, c in enumerate(cscore):
         
         pitches = [e[4] for e in c]
+        pitches_counter += len(pitches)
             
         tones_chord = sorted(set([p % 12 for p in pitches]))
              
@@ -189,7 +219,18 @@ def midi_to_chords(input_midi,
             out.append([int(sum(vels) / len(vels))])
 
         output.append(out)
-
+        
+    if verbose:
+        print('Done!')
+        print('=' * 70)
+        
+        print('Source MIDI composition has', len(zscore), 'notes')
+        print('Source MIDI composition has', len(cscore), 'chords')
+        print('-' * 70)
+        print('Final chords list contains total of', pitches_counter, 'pitches')
+        print('Final chords list has', len(output), 'chords')
+        print('=' * 70)
+        
     if return_only_chords:
         return [c[0][0] for c in output]
 
@@ -214,7 +255,7 @@ def chords_pitches_to_midi(chords_pitches,
                           ):
     if verbose:
         print('=' * 70)
-        print('Encoding tokens...')
+        print('Decoding tokens...')
         
     cpitches = []
 
