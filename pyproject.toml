@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "monsterpianotransformer"
-version = "25.1.84"
+version = "25.1.85"
 description = "Ultra-fast and very well fitted solo Piano music transformer"
 authors = [
     {name = "Alex Lev", email = "alexlev61@proton.me"}
@@ -26,7 +26,7 @@ dependencies = [
     "gradio"
 ]
 
-keywords = ["MIDI", "music", "music ai", "music transformer", "artificial instelligence"]
+keywords = ["MIDI", "music", "music ai", "music transformer", "artificial instelligence", "piano transformer"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
@@ -50,9 +50,10 @@ content-type = "text/markdown"
 
 [project.urls]
 Homepage = "https://github.com/asigalov61/monsterpianotransformer"
-Examples = "https://github.com/asigalov61/monsterpianotransformer/examples"
-Documentation = "https://github.com/asigalov61/monsterpianotransformer/docs"
-Repository = "https://github.com/asigalov61/monsterpianotransformer"
+SoundCloud = "https://soundcloud.com/aleksandr-sigalov-61/sets/monster-piano-transformer"
+Samples = "https://github.com/asigalov61/monsterpianotransformer/tree/main/monsterpianotransformer/output_samples"
+Examples = "https://github.com/asigalov61/monsterpianotransformer/tree/main/monsterpianotransformer/examples"
+Documentation = "https://github.com/asigalov61/monsterpianotransformer"
 Issues = "https://github.com/asigalov61/monsterpianotransformer/issues"
 Discussions = "https://github.com/asigalov61/monsterpianotransformer/discussions"
 Models = "https://huggingface.co/asigalov61/Monster-Piano-Transformer"
