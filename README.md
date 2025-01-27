@@ -83,7 +83,7 @@ model = mpt.load_model()
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=False)
+input_tokens = mpt.midi_to_tokens(sample_midi_path)
 
 # Generate seed MIDI continuation
 output_tokens = mpt.generate(model, input_tokens, num_gen_tokens=600, return_prime=True)
@@ -110,7 +110,7 @@ model = mpt.load_model()
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=False)
+input_tokens = mpt.midi_to_tokens(sample_midi_path)
 
 # Generate long seed MIDI auto-continuation
 output_tokens = mpt.generate_long(model, input_tokens, return_prime=True)
@@ -133,7 +133,7 @@ model = mpt.load_model()
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=False)
+input_tokens = mpt.midi_to_tokens(sample_midi_path)
 
 # Inpaint pitches
 output_tokens = mpt.inpaint_pitches(model, input_tokens)
@@ -156,7 +156,7 @@ model = mpt.load_model(model_name='with velocity - 3 epochs')
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=True)
+input_tokens = mpt.midi_to_tokens(sample_midi_path)
 
 # Inpaint velocities
 output_tokens = mpt.inpaint_velocities_simple(model, input_tokens)
@@ -179,7 +179,7 @@ model = mpt.load_model(model_name='velocity inpainting - 2 epochs')
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=True)
+input_tokens = mpt.midi_to_tokens(sample_midi_path)
 
 # Inpaint velocities
 output_tokens = mpt.inpaint_velocities_seq2seq(model, input_tokens, verbose=True)
