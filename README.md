@@ -94,6 +94,18 @@ mpt.tokens_to_midi(output_tokens[0])
 
 ***
 
+## Available models
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Print list of available models
+mpt.load_model('models info')
+```
+
+***
+
 ## Main features use examples
 
 ### Long auto-continuation generation
