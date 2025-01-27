@@ -77,7 +77,7 @@ monsterpianotransformer-gradio
 # Import Monster Piano Transformer as mpt
 import monsterpianotransformer as mpt
 
-# Print list of available models
+# Print a list of available models
 mpt.load_model('models info')
 ```
 
