@@ -11,6 +11,8 @@ from . import model_loader
 
 from . import TMIDIX
 
+from .models import *
+
 import torch
 
 from .x_transformer_1_23_2 import top_p
@@ -946,7 +948,6 @@ def generate_chord(model,
                    max_num_pitches=-1,
                    temperature=0.9,
                    return_prime=False,
-                   model_with_velocity=False,
                    verbose=False
                   ):
 
@@ -975,6 +976,12 @@ def generate_chord(model,
         print('Generating chord...')
 
     #=====================================================================
+        
+    if detect_model_type(model)[1] == 2:
+        model_with_velocity = True
+        
+    else:
+        model_with_velocity = False
 
     if model_with_velocity:
         inp_seq_type = 384

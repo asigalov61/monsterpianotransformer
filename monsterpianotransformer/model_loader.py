@@ -50,10 +50,21 @@ def load_model(model_name='without velocity - 7 epochs',
     
     import monsterpianotransformer as mpt
     
-    print(mpt.MODELS_INFO)
-    
-    mpt_model = mpt.load_model()
+    mpt_model = mpt.load_model('models')
     """
+    
+    if model_name not in MODELS_PARAMETERS:
+        print('=' * 70)
+        print('Available models:')
+        
+        for n, d in MODELS_INFO.items():
+            print('=' * 70)
+            print('MODEL NAME:', n)
+            print('-' * 70)
+            print('MODEL INFO:', d)
+
+        print('=' * 70)
+        return []
 
     if verbose:
         os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '0'

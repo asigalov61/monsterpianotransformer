@@ -111,5 +111,23 @@ MODELS_PARAMETERS = {'without velocity - 7 epochs': {'seq_len': 2048,
                      }
 
 #===================================================================================================
+
+def detect_model_type(model):
+
+    seq_len = model.max_seq_len
+    pad_idx = model.pad_value
+
+    model_type = 'unknown'
+    model_idx = -1
+
+    for i, np in enumerate(MODELS_PARAMETERS.items()):
+        if np[1]['seq_len'] == seq_len and np[1]['pad_idx'] == pad_idx:
+            model_type = np[0]
+            model_idx = i
+            break
+
+    return model_type, model_idx
+
+#===================================================================================================
 # This is the end of models Python module
 #===================================================================================================

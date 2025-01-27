@@ -1,4 +1,4 @@
-from .models import MODELS_INFO
+from .models import detect_model_type
 
 from .model_loader import load_model
 
