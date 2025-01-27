@@ -15,7 +15,7 @@ from .models import *
 
 import torch
 
-from .x_transformer_1_23_2 import top_p
+from .x_transformer_1_23_2 import top_p, top_k
 
 import random
 
@@ -145,6 +145,7 @@ def notes_list_to_tokens_chords_pitches(notes_list,
                 #==============================================
         
                 tokens_seq = []
+                chords_toks_list = []
                 pitches_list = []
                 chords_list = []
         
@@ -159,6 +160,10 @@ def notes_list_to_tokens_chords_pitches(notes_list,
                         tokens_seq.append(dtime)
     
                     seen = []
+                    
+                    durs = []
+                    ptcs = []
+                    vels = []
                         
                     for note in chord:
                         
@@ -168,15 +173,20 @@ def notes_list_to_tokens_chords_pitches(notes_list,
     
                         if ptc not in seen:
                             tokens_seq.extend([dur+128, ptc+256])
+                            
+                            durs.append(dur)
+                            ptcs.append(ptc)
         
                             if encode_velocity:
                                  tokens_seq.append(vel+384)
+
+                            vels.append(vel)
     
                             seen.append(ptc)
 
                     #==============================================
     
-                    pitches = sorted(set([e[2] for e in chord]), reverse=True)
+                    pitches = sorted(set(ptcs), reverse=True)
                     pitches_list.append(pitches)
 
                     #==============================================
@@ -190,7 +200,14 @@ def notes_list_to_tokens_chords_pitches(notes_list,
                         tones_chord = TMIDIX.check_and_fix_tones_chord(tones_chord)
                         chord_tok = TMIDIX.ALL_CHORDS_SORTED.index(tones_chord)
     
-                    chords_list.append(chord_tok+chords_tokens_shift)
+                    chords_toks_list.append(chord_tok+chords_tokens_shift)
+
+                    #==============================================
+
+                    avg_dur = int(sum(durs) / len(durs))
+                    avg_vel = int(sum(vels) / len(vels))
+                    
+                    chords_list.append([[chord_tok] + pitches, [dtime], [avg_dur], [avg_vel]])
     
                 #==============================================
                 
@@ -204,7 +221,7 @@ def notes_list_to_tokens_chords_pitches(notes_list,
 
                 #==============================================
                     
-                return tokens_seq, chords_list, pitches_list
+                return tokens_seq, chords_toks_list, pitches_list, chords_list
 
                 #==============================================
     
@@ -1499,6 +1516,7 @@ def texture_chords(model,
                    num_memory_tokens=2040,
                    temperature=1.0,
                    top_p_value=0.96,
+                   top_k_value=0,
                    match_pitches_counts=False,
                    keep_high_pitch=True,
                    output_velocities=True,
@@ -1607,13 +1625,24 @@ def texture_chords(model,
             
             with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
                 
-                out = model.generate(x,
-                                     1,
-                                     temperature=temperature,
-                                     filter_logits_fn=top_p,
-                                     filter_kwargs={'thres': top_p_value},
-                                     return_prime=False,
-                                     verbose=False)
+                if top_k_value > 0:
+                    
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         filter_logits_fn=top_k,
+                                         filter_kwargs={'k': top_k_value},
+                                         return_prime=False,
+                                         verbose=False)
+                    
+                else:
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         filter_logits_fn=top_p,
+                                         filter_kwargs={'thres': top_p_value},
+                                         return_prime=False,
+                                         verbose=False)
             
             y = out.tolist()[0][0]
     
