@@ -246,6 +246,8 @@ model = mpt.load_model()
 
 # Generate single chord
 output_tokens = mpt.generate_chord(model)
+
+print(output_tokens)
 ```
 
 ### Chords progressions
