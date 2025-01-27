@@ -304,5 +304,67 @@ mpt.tokens_to_midi(output_tokens)
 
 ***
 
+## Advanced use examples
+
+### Chords progressions generation and texturing
+
+#### From custom chords list
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+cp_model = mpt.load_model('chords progressions - 3 epochs')
+tex_model = mpt.load_model('chords texturing - 3 epochs')
+
+# Prime chord(s) as a list of lists of semitones and/or pitches
+prime_chords = [
+                [0],
+                [0, 2],
+                [0, 2, 4]
+               ]
+
+# Convert chords to chords tokens
+chords_tokens = mpt.chords_to_chords_tokens(prime_chords)
+
+# Generate chords progression continuation
+cp_tokens = mpt.generate(cp_model, chords_tokens, num_gen_tokens=64, return_prime=True)
+
+# Generate pitches for chords in generated chords progression continuation
+output_tokens = mpt.generate_chords_pitches(tex_model, cp_tokens[0])
+
+# Convert output tokens to MIDI
+mpt.chords_pitches_to_midi(output_tokens, output_tokens)
+```
+
+#### From custom MIDI
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+cp_model = mpt.load_model('chords progressions - 3 epochs')
+tex_model = mpt.load_model('chords texturing - 3 epochs')
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[7][1]
+
+# Load seed MIDI
+chords_tokens = mpt.midi_to_chords(sample_midi_path, return_only_chords=True)
+
+# Generate chords progression continuation
+cp_tokens = mpt.generate(cp_model, chords_tokens[:64], num_gen_tokens=64, return_prime=True)
+
+# Generate pitches for chords in generated chords progression continuation
+output_tokens = mpt.generate_chords_pitches(tex_model, cp_tokens[0])
+
+# Convert output tokens to MIDI
+mpt.chords_pitches_to_midi(output_tokens, output_tokens)
+```
+
 ### Project Los Angeles
 ### Tegridy Code 2025
