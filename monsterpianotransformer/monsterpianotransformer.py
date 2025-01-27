@@ -1177,6 +1177,7 @@ def generate_chord(model,
                    chord_tok_tries=320,
                    max_num_pitches=-1,
                    temperature=0.9,
+                   top_p_value=0,
                    return_prime=False,
                    verbose=False
                   ):
@@ -1238,11 +1239,11 @@ def generate_chord(model,
         x = torch.LongTensor(inp_toks).to(device)
     
         y = 128
-    
+        
         while y > 127:
     
             with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
-            
+
                 out = model.generate(x,
                                      1,
                                      temperature=temperature,
@@ -1251,7 +1252,8 @@ def generate_chord(model,
                                     )
                                         
             y = out.tolist()[0][0]
-    
+        
+
         inp_toks.append(y)
 
     #=====================================================================
@@ -1275,13 +1277,24 @@ def generate_chord(model,
             x = torch.LongTensor(inp_toks).to(device)
     
             with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
-            
-                out = model.generate(x,
-                                     1,
-                                     temperature=temperature,
-                                     return_prime=False,
-                                     verbose=False
-                                    )
+                
+                if 0 < top_p_value < 1:
+                    out = model.generate(x,
+                                         1,
+                                         filter_logits_fn=top_p,
+                                         filter_kwargs={'thres': top_p_value},
+                                         temperature=temperature,
+                                         return_prime=False,
+                                         verbose=False
+                                        )
+                    
+                else:
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         return_prime=False,
+                                         verbose=False
+                                        )
                                         
             y = out.tolist()[0][0]
     
@@ -1354,6 +1367,7 @@ def generate_chords_pitches(model,
                             num_gen_chords=128,
                             temperature=0.9,
                             top_p_value=0.0,
+                            verify_pitches=True,
                             return_chords_tokens=False,
                             return_as_tokens_seq=False,
                             tokens_seq_dtimes=8,
@@ -1428,6 +1442,8 @@ def generate_chords_pitches(model,
             outp.append(input_chords_tokens[sidx+i])
 
         y = 0
+        
+        seen = []
 
         while y < 128:
         
@@ -1456,10 +1472,17 @@ def generate_chords_pitches(model,
                                         )
             
             y = out.tolist()[0][0]
-
-            if y < 128:
-                inputs.append(y)
-                outp.append(y)
+            
+            if verify_pitches:
+                if y < 128 and y not in seen:
+                    inputs.append(y)
+                    outp.append(y)
+                    seen.append(y)
+                    
+            else:
+                if y < 128:
+                    inputs.append(y)
+                    outp.append(y)
 
         outputs.append(outp)
 
@@ -1515,10 +1538,10 @@ def texture_chords(model,
                    num_tex_chords=256,
                    num_memory_tokens=2040,
                    temperature=1.0,
-                   top_p_value=0.96,
-                   top_k_value=0,
+                   top_p_value=0.9,
                    match_pitches_counts=False,
                    keep_high_pitch=True,
+                   verify_pitches=True,
                    output_velocities=True,
                    verbose=False
                   ):
@@ -1580,15 +1603,21 @@ def texture_chords(model,
         
     #========================================================================
 
+    verbosity_value = (len(midi_chords_list) // 100) + 4
+
     for i in range(len(midi_chords_list[num_prime_chords:num_prime_chords+num_tex_chords])):
 
         if verbose:
-            if (i+1) % 8 == 0:
+            if (i+1) % verbosity_value == 0:
                 print('Textured', i+1, '/', len(midi_chords_list[num_prime_chords:num_prime_chords+num_tex_chords]), 'chords')
                 
         idx = num_prime_chords + i
+
+        cho_tok = midi_chords_list[idx][0][0]
     
-        inputs.append(midi_chords_list[idx][0][0]+128)
+        inputs.append(cho_tok+128)
+
+        tones_chord = TMIDIX.ALL_CHORDS_SORTED[cho_tok]
 
         dtime = midi_chords_list[idx][1][0]-pt
 
@@ -1599,14 +1628,19 @@ def texture_chords(model,
         y = 0
         count = 0
         pcount = False
-
+        tries = 0
+        
         chord_len = len(midi_chords_list[idx][0][1:])
 
         dur = midi_chords_list[idx][2][0]
         vel = midi_chords_list[idx][3][0]
 
+        seen = []
+
         if keep_high_pitch:
             inputs.append(midi_chords_list[idx][0][1])
+            seen.append(midi_chords_list[idx][0][1])
+            
             outputs.extend([dur+128, midi_chords_list[idx][0][1]+256])
 
             if output_velocities:
@@ -1617,7 +1651,7 @@ def texture_chords(model,
             if chord_len == 1:
                 pcount = True
     
-        while y < 128 and not pcount:
+        while y < 128 and not pcount and tries < 50:
 
             inputs = inputs[-num_memory_tokens:]
     
@@ -1625,17 +1659,8 @@ def texture_chords(model,
             
             with torch.amp.autocast(device_type=device, dtype=torch.bfloat16):
                 
-                if top_k_value > 0:
+                if 0 < top_p_value < 1:
                     
-                    out = model.generate(x,
-                                         1,
-                                         temperature=temperature,
-                                         filter_logits_fn=top_k,
-                                         filter_kwargs={'k': top_k_value},
-                                         return_prime=False,
-                                         verbose=False)
-                    
-                else:
                     out = model.generate(x,
                                          1,
                                          temperature=temperature,
@@ -1643,18 +1668,41 @@ def texture_chords(model,
                                          filter_kwargs={'thres': top_p_value},
                                          return_prime=False,
                                          verbose=False)
+                    
+                else:
+                    out = model.generate(x,
+                                         1,
+                                         temperature=temperature,
+                                         return_prime=False,
+                                         verbose=False)
             
             y = out.tolist()[0][0]
+
+            if verify_pitches:
     
-            if y < 128:
-                inputs.append(y)
-                outputs.extend([dur+128, y+256])
-
-                if output_velocities:
-                    outputs.append(vel+384)
+                if y < 128 and y % 12 in tones_chord and y not in seen:
+                    inputs.append(y)
+                    seen.append(y)
                     
-                count += 1
-
+                    outputs.extend([dur+128, y+256])
+    
+                    if output_velocities:
+                        outputs.append(vel+384)
+                        
+                    count += 1
+                    
+            else:    
+                if y < 128 and y not in seen:
+                    inputs.append(y)
+                    seen.append(y)
+                    
+                    outputs.extend([dur+128, y+256])
+    
+                    if output_velocities:
+                        outputs.append(vel+384)
+                        
+                    count += 1
+                    
             if match_pitches_counts:
                 if count == chord_len:
                     pcount = True
@@ -1662,6 +1710,8 @@ def texture_chords(model,
             else:
                 if y > 127:
                     pcount = True
+
+            tries += 1
 
     #========================================================================
                 
