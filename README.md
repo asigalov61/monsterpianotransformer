@@ -336,7 +336,7 @@ cp_tokens = mpt.generate(cp_model, chords_tokens, num_gen_tokens=64, return_prim
 output_tokens = mpt.generate_chords_pitches(tex_model, cp_tokens[0])
 
 # Convert output tokens to MIDI
-mpt.chords_pitches_to_midi(output_tokens, output_tokens)
+mpt.chords_pitches_to_midi(output_tokens)
 ```
 
 #### From custom MIDI
@@ -363,7 +363,7 @@ cp_tokens = mpt.generate(cp_model, chords_tokens[:64], num_gen_tokens=64, return
 output_tokens = mpt.generate_chords_pitches(tex_model, cp_tokens[0])
 
 # Convert output tokens to MIDI
-mpt.chords_pitches_to_midi(output_tokens, output_tokens)
+mpt.chords_pitches_to_midi(output_tokens)
 ```
 
 ### Project Los Angeles
