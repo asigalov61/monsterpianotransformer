@@ -463,6 +463,9 @@ mpt.tokens_to_midi(output_tokens)
 # You can manually create compatible input tokens sequence, chords list and pitches list
 # from a simple notes list
 
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
 # Custom notes list should be in the following format:
 # [delta start time (0-127), duration (1-127), MIDI pitch (1-127)), velocity (1-127)]
 sample_notes_list = [
@@ -479,9 +482,6 @@ sample_notes_list = [
 [0, 23, 55, 55], [0, 23, 50, 50], [0, 23, 47, 47], [0, 23, 43, 43], [0, 23, 31, 113]
 
 ]
-
-# Import Monster Piano Transformer as mpt
-import monsterpianotransformer as mpt
 
 # Use notes_list_to_tokens_sequence function to convert the notes list
 tokens_seq, chords_list, pitches_list = mpt.notes_list_to_tokens_sequence(sample_notes_list)
