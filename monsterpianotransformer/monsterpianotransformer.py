@@ -111,7 +111,7 @@ def notes_list_to_tokens_chords_pitches(notes_list,
         for i, ele in enumerate(lst):
             resorted_lst.append([ele[0]] + sorted_lst[i])
 
-    return resorted_lst
+        return resorted_lst
 
     #==============================================
 
