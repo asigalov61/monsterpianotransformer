@@ -366,5 +366,41 @@ output_tokens = mpt.generate_chords_pitches(tex_model, cp_tokens[0])
 mpt.chords_pitches_to_midi(output_tokens)
 ```
 
+#### From custom MIDI with prime chords and prime chords pitches
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Load desired Monster Piano Transformer model
+# There are several to choose from...
+cp_model = mpt.load_model('chords progressions - 3 epochs')
+tex_model = mpt.load_model('chords texturing - 3 epochs')
+
+# Get sample seed MIDI path
+sample_midi_path = mpt.get_sample_midi_files()[7][1]
+
+# Load seed MIDI
+chords_list = mpt.midi_to_chords(sample_midi_path)
+
+# Number of prime chords
+num_prime_chords = 64
+
+# Create prime chords tokens list
+prime_chords_tokens = [c[0][0] for c in chords_list[:num_prime_chords]]
+
+# Create prime chords pitches list
+prime_chords_pitches = [c[0][1:] for c in chords_list[:num_prime_chords]]
+
+# Generate chords progression continuation
+cp_tokens = mpt.generate(cp_model, prime_chords_tokens, num_gen_tokens=128, return_prime=True)
+
+# Generate pitches for chords in generated chords progression continuation
+output_tokens = mpt.generate_chords_pitches(tex_model, cp_tokens[0], prime_chords_pitches)
+
+# Convert output tokens to MIDI
+mpt.chords_pitches_to_midi(output_tokens, chords_list)
+```
+
 ### Project Los Angeles
 ### Tegridy Code 2025
