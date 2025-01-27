@@ -59,10 +59,10 @@ choco install fluidsynth
 ## Gradio app
 
 ```sh
-# pip package includes a demo Gradio app without audio support
+# pip package includes a demo Gradio app without audio output
 
 # Please refer to monsterpianotransformer/gradio/app_full.py
-# for a full version with fluidsynth audio support
+# for a full version with fluidsynth audio output
 
 monsterpianotransformer-gradio
 ```
@@ -83,13 +83,13 @@ model = mpt.load_model()
 sample_midi_path = mpt.get_sample_midi_files()[6][1]
 
 # Load seed MIDI
-input_tokens = mpt.midi_to_tokens(sample_midi_path, model_with_velocity=False)
+input_tokens = mpt.midi_to_tokens(sample_midi_path, encode_velocity=False)
 
 # Generate seed MIDI continuation
-output_tokens = mpt.generate(model, input_tokens, 600, return_prime=True)
+output_tokens = mpt.generate(model, input_tokens, num_gen_tokens=600, return_prime=True)
 
-# Save output batch 0 to MIDI
-mpt.tokens_to_midi(output_tokens[0], model_with_velocity=False)
+# Save output batch # 0 to MIDI
+mpt.tokens_to_midi(output_tokens[0])
 ```
 
 ***
