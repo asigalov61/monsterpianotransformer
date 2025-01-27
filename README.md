@@ -455,6 +455,37 @@ mpt.tokens_to_midi(output_tokens)
 
 ***
 
+## Manual input sequences
+
+### Custom notes list to tokens, chords and pitches
+
+```python
+# You can manually create compatible input tokens sequence, chords list and pitches list
+# from a simple notes list
+
+# Custom notes list should be in the following format:
+# [delta start time (0-127), duration (1-127), MIDI pitch (1-127)), velocity (1-127)]
+sample_notes_list = [
+    
+[0, 70, 84, 84], [0, 70, 72, 72], [0, 70, 72, 115], [0, 70, 67, 67], [0, 70, 64, 64],
+[0, 70, 60, 60], [0, 70, 55, 55], [0, 70, 52, 52], [0, 70, 48, 48], [0, 70, 36, 40],
+[0, 70, 24, 120], [82, 11, 79, 79], [0, 11, 67, 67], [0, 11, 67, 122], [0, 11, 64, 64],
+[0, 11, 52, 52], [0, 11, 28, 116], [11, 23, 84, 84], [0, 23, 72, 72], [0, 23, 72, 115],
+[0, 23, 67, 67], [0, 23, 60, 60], [0, 23, 55, 55], [0, 23, 52, 52], [0, 23, 48, 48],
+[0, 23, 24, 120], [24, 17, 79, 79], [0, 17, 67, 67], [0, 17, 67, 122], [0, 17, 64, 64],
+[0, 17, 60, 60], [0, 17, 55, 55], [0, 17, 52, 52], [0, 17, 48, 48], [0, 17, 24, 120],
+[17, 5, 81, 81], [0, 5, 69, 69], [0, 5, 69, 124], [0, 5, 65, 65], [0, 5, 53, 53], [0, 5, 29, 115],
+[6, 23, 83, 83], [0, 23, 71, 71], [0, 23, 71, 126], [0, 23, 67, 67], [0, 23, 59, 59],
+[0, 23, 55, 55], [0, 23, 50, 50], [0, 23, 47, 47], [0, 23, 43, 43], [0, 23, 31, 113]
+
+]
+
+# Use notes_list_to_tokens_sequence function to convert the notes list
+tokens_seq, chords_list, pitches_list = notes_list_to_tokens_sequence(sample_notes_list)
+```
+
+***
+
 ## Dev and tests
 
 ### Loading
