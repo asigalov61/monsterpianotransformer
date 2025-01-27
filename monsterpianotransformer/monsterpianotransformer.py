@@ -92,6 +92,146 @@ def chords_tokens_to_chords(chords_tokens,
 
 #===================================================================================================
 
+def notes_list_to_tokens_chords_pitches(notes_list, 
+                                        encode_velocity=False,
+                                        chords_tokens_shift=0,
+                                        verbose=False
+                                       ):
+
+    #==============================================
+
+    def resort(lst):
+
+        dur_ptc_vel = [e[1:] for e in lst]
+        
+        sorted_lst = sorted(dur_ptc_vel, key = lambda x: -x[1])
+    
+        resorted_lst = []
+        
+        for i, ele in enumerate(lst):
+            resorted_lst.append([ele[0]] + sorted_lst[i])
+
+    return resorted_lst
+
+    #==============================================
+
+    if verbose:
+        print('=' * 70)
+    
+    if type(notes_list) == list:
+        if all([True for n in notes_list if type(n) == 'list']):
+            if all([True for n in notes_list if len(n) == 4]):
+    
+                #==============================================
+        
+                chords = []
+                cho = []
+                
+                for i, note in enumerate(notes_list):
+                    if note[0] == 0 and i == 0:
+                        cho.append(note)
+        
+                    if note[0] != 0:
+                        if cho:
+                            chords.append(resort(cho))
+        
+                        cho = [note]
+                    else:
+                        cho.append(note)
+        
+                if cho:
+                    chords.append(resort(cho))
+        
+                #==============================================
+        
+                tokens_seq = []
+                pitches_list = []
+                chords_list = []
+        
+                for i, chord in enumerate(chords):
+        
+                    dtime = max(0, min(127, chord[0][0] % 128))
+                    
+                    if dtime == 0 and i == 0:
+                        tokens_seq.append(dtime)
+        
+                    if dtime != 0:
+                        tokens_seq.append(dtime)
+    
+                    seen = []
+                        
+                    for note in chord:
+                        
+                        dur = max(1, min(127, note[1] % 128))
+                        ptc = max(1, min(127, note[2] % 128))
+                        vel = max(1, min(127, note[3] % 128))
+    
+                        if ptc not in seen:
+                            tokens_seq.extend([dur+128, ptc+256])
+        
+                            if encode_velocity:
+                                 tokens_seq.append(vel+384)
+    
+                            seen.append(ptc)
+
+                    #==============================================
+    
+                    pitches = sorted(set([e[2] for e in chord]), reverse=True)
+                    pitches_list.append(pitches)
+
+                    #==============================================
+    
+                    tones_chord = sorted(set([p % 12 for p in pitches]))
+    
+                    if tones_chord in TMIDIX.ALL_CHORDS_SORTED:
+                        chord_tok = TMIDIX.ALL_CHORDS_SORTED.index(tones_chord)
+    
+                    else:
+                        tones_chord = TMIDIX.check_and_fix_tones_chord(tones_chord)
+                        chord_tok = TMIDIX.ALL_CHORDS_SORTED.index(tones_chord)
+    
+                    chords_list.append(chord_tok+chords_tokens_shift)
+    
+                #==============================================
+                
+                if verbose:
+                    print('Done!')
+                    print('=' * 70)
+                    print('Tokens sequence has', len(tokens_seq), 'tokens')
+                    print('Chords list has', len(chords_list), 'chords')
+                    print('Pitches list has', len(TMIDIX.flatten(pitches_list)), 'pitches')
+                    print('=' * 70)
+
+                #==============================================
+                    
+                return tokens_seq, chords_list, pitches_list
+
+                #==============================================
+    
+            else:
+                if verbose:
+                    print('Input sublists do not have correct number of elements (4).')
+
+                return []
+
+            #==============================================
+    
+        else:
+            if verbose:
+                print('Input is not a list of lists.')
+
+            return []
+
+        #==============================================
+
+    else:
+        if verbose:
+            print('Input is not a list.')
+
+        return []
+
+#===================================================================================================
+
 def generate(model,
              input_tokens,
              num_gen_tokens=600,

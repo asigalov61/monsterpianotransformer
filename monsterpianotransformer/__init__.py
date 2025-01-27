@@ -9,6 +9,8 @@ from .sample_midis import get_sample_midi_files
 
 from .monsterpianotransformer import chords_to_chords_tokens, chords_tokens_to_chords
 
+from .monsterpianotransformer import notes_list_to_tokens_chords_pitches
+
 from .monsterpianotransformer import generate, generate_long
 
 from .monsterpianotransformer import generate_chord, generate_chords_pitches
