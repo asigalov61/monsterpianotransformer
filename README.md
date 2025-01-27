@@ -71,6 +71,18 @@ monsterpianotransformer-gradio
 
 ***
 
+## Available models
+
+```python
+# Import Monster Piano Transformer as mpt
+import monsterpianotransformer as mpt
+
+# Print list of available models
+mpt.load_model('models info')
+```
+
+***
+
 ## Quick-start use example
 
 ```python
@@ -92,18 +104,6 @@ output_tokens = mpt.generate(model, input_tokens, num_gen_tokens=600, return_pri
 
 # Save output batch # 0 to MIDI
 mpt.tokens_to_midi(output_tokens[0])
-```
-
-***
-
-## Available models
-
-```python
-# Import Monster Piano Transformer as mpt
-import monsterpianotransformer as mpt
-
-# Print list of available models
-mpt.load_model('models info')
 ```
 
 ***
