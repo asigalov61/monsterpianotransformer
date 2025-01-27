@@ -42,7 +42,7 @@ And in its rhythm, our spirits glow.
 pip install monsterpianotransformer
 ```
 
-#### (Optional) [FluidSynth](https://github.com/FluidSynth/fluidsynth/wiki/Download) for MIDI to Audio functinality
+#### (Optional) [FluidSynth](https://github.com/FluidSynth/fluidsynth/wiki/Download) for MIDI to Audio functionality
 
 ##### Ubuntu or Debian
 
